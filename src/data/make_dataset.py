@@ -2,91 +2,92 @@
 import click
 import logging
 from pathlib import Path
+
 # from dotenv import find_dotenv, load_dotenv
 
 
 @click.command()
-@click.argument('input_filepath', type=click.Path(exists=True))
-@click.argument('output_filepath', type=click.Path())
+@click.argument("input_filepath", type=click.Path(exists=True))
+@click.argument("output_filepath", type=click.Path())
 def main(input_filepath, output_filepath):
-    """ Runs data processing scripts to turn raw data from (../raw) into
-        cleaned data ready to be analyzed (saved in ../processed).
+    """Runs data processing scripts to turn raw data from (../raw) into
+    cleaned data ready to be analyzed (saved in ../processed).
     """
     logger = logging.getLogger(__name__)
-    logger.info('making final data set from raw data')
+    logger.info("making final data set from raw data")
 
     # Data downloader and cleaner
     import pandas as pd
     import requests
     import re
     from pathlib import Path
+    from preset_types import type_dict
 
-    data_path = Path('../../data/raw/')
+    data_path = Path("../../data/raw/")
 
-    #Load the csv file
-    meta = pd.read_csv(data_path/'TrainingData_BU&Public_CWS.csv')
+    # Load the csv file
+    meta = pd.read_csv(data_path / "TrainingData_BU&Public_CWS.csv")
 
-    # Clean the data, convert ids to integer types
+    # create a column named 'clip_id' to keep track of original indices.
+    meta["clip_id"] = meta.index
+    cols = list(meta.columns)
+    meta = meta[cols[-1:] + cols[:-1]]
 
+    # Drop last entry since it's all NaN values. 
+    meta.drop(meta.tail(1).index, inplace=True)
 
-    meta.drop(index=1152839, inplace=True)
-    meta.recording_id = meta.recording_id.astype(int)
-    meta.location_id = meta.location_id.astype(int)
-    meta.task_id = meta.task_id.astype(int)
-    meta.tag_id = meta.tag_id.astype(int)
-    meta.abundance = meta.abundance.astype(str)
+    # Replace empty fields with -1 
+    meta.loc[meta['verifier_user_id'].isna(), 'verifier_user_id'] = -1
+
+    #Change all the data types in the dataframe to the chosen types contained in the type dict.
+    meta = meta.astype(type_dict)
 
     # Drop tmtt abundance tags.
-    tmtt_idxs = meta[meta.abundance=='TMTT'].index
+    tmtt_idxs = meta[meta.abundance == "TMTT"].index
     meta.drop(tmtt_idxs, inplace=True)
 
     # Drop non song vocalizations
-    not_song_idxs = meta[meta.vocalization!='Song'].index
+    not_song_idxs = meta[meta.vocalization != "Song"].index
     meta.drop(not_song_idxs, inplace=True)
 
     # Drop recordings not labeled in wildtrax
-    labeled_elsewhere_idxs = meta[meta.tagged_in_wildtrax=='f'].index
+    labeled_elsewhere_idxs = meta[meta.tagged_in_wildtrax == "f"].index
     meta.drop(labeled_elsewhere_idxs, inplace=True)
 
-    # choose OSFL entries
-    osfl_idxs = meta[meta.species_code=='OSFL'].index
-    osfls = meta.loc[osfl_idxs]
+    # Remove the clips which don't contain a link to a recording
+    meta.drop(meta.loc[meta.clip_url=='nan'].index, inplace=True)
 
     # Add a column named `file_type` to the dataframe. This is done only to samples with a clip_url.
-    osfls['file_type'] = None
-    for idx in osfls[~osfls.clip_url.isna()].index:
-        
-        osfls['file_type'][idx] = osfls['clip_url'][idx].split('.')[-1]
+    meta["file_type"] = None
+    for idx in meta[~meta.clip_url.isna()].index:
+        meta["file_type"][idx] = meta["clip_url"][idx].split(".")[-1]
 
-    # drop entries with a missing clip_url field from OSFLs
-    osfls.drop(osfls.loc[osfls.clip_url.isna()].index, inplace=True)
-
-    # Download audio clips if they don't already exist in data/raw/recordings
-
-    def exists(fname):
-        '''
-        check to see whether a file exists
-        '''
-        return Path.exists(fname)
-
-    rec_path = Path.joinpath(data_path, 'recordings')
-
-    for rec in (osfls.index):
-        clip_url = osfls.clip_url[rec]
-        ext = osfls.file_type[rec]
-        file = Path.joinpath(rec_path, str(osfls.recording_id[rec]) + '.' + ext)
-        
-        if exists(file):
-            print(f'{file} already downloaded')
-        else:
-            print(f'downloading {file}')
-            r = requests.get(clip_url)
-            with open(file, 'wb') as f:
-                f.write(r.content)
+    # # choose OSFL entries
+    # osfl_idxs = meta[meta.species_code == "OSFL"].index
+    # osfls = meta.loc[osfl_idxs]
 
 
-if __name__ == '__main__':
-    log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    # # drop entries with a missing clip_url field from OSFLs
+    # osfls.drop(osfls.loc[osfls.clip_url.isna()].index, inplace=True)
+
+    # # Download audio clips if they don't already exist in data/raw/recordings
+
+    # def exists(fname):
+    #     """
+    #     check to see whether a file exists
+    #     """
+    #     return Path.exists(fname)
+
+
+
+    # Export the cleaned version of the database
+    processed_data_path = Path('../../data/processed/')
+    meta.to_csv(processed_data_path/'processed_metadata.csv')
+    meta.to_pickle(processed_data_path/'processed_metadata.pkl')
+
+
+if __name__ == "__main__":
+    log_fmt = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     logging.basicConfig(level=logging.INFO, format=log_fmt)
 
     # not used in this stub but often useful for finding various files
@@ -97,4 +98,3 @@ if __name__ == '__main__':
     # load_dotenv(find_dotenv())
 
     main()
-
