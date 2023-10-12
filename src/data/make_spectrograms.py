@@ -36,7 +36,7 @@ raw_nocall_audio_files = glob(str(raw_nocall_audio_path) + "/*")
 def show_spec_from_audio(file_path):
     audio = Audio.from_file(file_path)
     spec = Spectrogram.from_audio(audio)
-    image = spec.to_image(shape=image_shape, invert=True)
+    image = spec.to_image(shape=image_shape, invert=True, format="jpg")
     return image
 
 
@@ -74,11 +74,11 @@ def make_and_save_specs(audio_files, clip_length, image_shape, image_save_path):
             exceptions += 1
         else:
             # save the spectrogram if it hasn't been saved already.
-            fname = re.sub("\.[\w]+", ".png", (Path(audio_file).name))
+            fname = re.sub("\.[\w]+", ".jpg", (Path(audio_file).name))
             if Path.exists(image_save_path.joinpath(fname)):
                 skipped += 1
             else:
-                image.save(image_save_path.joinpath(fname), format="png")
+                image.save(image_save_path.joinpath(fname), format="jpeg")
 
     print(
         f"finished making spectrograms. Skipped {skipped} with {exceptions} exceptions"
