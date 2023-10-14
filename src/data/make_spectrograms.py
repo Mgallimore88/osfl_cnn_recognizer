@@ -16,8 +16,10 @@ raw_call_audio_path = Path.joinpath(data_path, "raw", "call", "audio")
 raw_nocall_audio_path = Path.joinpath(data_path, "raw", "nocall", "audio")
 processed_call_audio_path = Path.joinpath(data_path, "processed", "call", "audio")
 processed_nocall_audio_path = Path.joinpath(data_path, "processed", "nocall", "audio")
-call_save_path = Path.joinpath(data_path, "processed", "call", "spectrograms")
-nocall_save_path = Path.joinpath(data_path, "processed", "nocall", "spectrograms")
+call_save_path = Path.joinpath(data_path, "interim", "temp_png", "call", "spectrograms")
+nocall_save_path = Path.joinpath(
+    data_path, "interim", "temp_png", "nocall", "spectrograms"
+)
 
 paths = [
     processed_nocall_audio_path,
@@ -36,7 +38,7 @@ raw_nocall_audio_files = glob(str(raw_nocall_audio_path) + "/*")
 def show_spec_from_audio(file_path):
     audio = Audio.from_file(file_path)
     spec = Spectrogram.from_audio(audio)
-    image = spec.to_image(shape=image_shape, invert=True, format="jpg")
+    image = spec.to_image(shape=image_shape, invert=True, format="png")
     return image
 
 
@@ -59,6 +61,7 @@ def make_uniform_spectrogram(audio_file, clip_length, image_shape):
     clip = resize_clip(audio_file, clip_length)
     spec = Spectrogram.from_audio(clip)
     image = spec.to_image(shape=image_shape, invert=True)
+    image.convert("RGB")
     return image
 
 
@@ -74,11 +77,11 @@ def make_and_save_specs(audio_files, clip_length, image_shape, image_save_path):
             exceptions += 1
         else:
             # save the spectrogram if it hasn't been saved already.
-            fname = re.sub("\.[\w]+", ".jpg", (Path(audio_file).name))
+            fname = re.sub("\.[\w]+", ".png", (Path(audio_file).name))
             if Path.exists(image_save_path.joinpath(fname)):
                 skipped += 1
             else:
-                image.save(image_save_path.joinpath(fname), format="jpeg")
+                image.save(image_save_path.joinpath(fname), format="png")
 
     print(
         f"finished making spectrograms. Skipped {skipped} with {exceptions} exceptions"
