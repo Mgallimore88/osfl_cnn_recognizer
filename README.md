@@ -3,6 +3,15 @@ osfl_recognizer
 
 cnn for recognizing olive sided flycatcher calls in audio recordings.
 
+For manual installation,
+- install conda
+- open bash terminal then run 
+conda create --name osfl pip python=3.10
+conda activate osfl
+pip install opensoundscape==0.10.0
+conda install -c fastai fastai
+
+
 Project Organization
 ------------
 
