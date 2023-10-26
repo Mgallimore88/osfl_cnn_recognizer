@@ -81,5 +81,9 @@ Project Organization
 
 
 --------
+A note on notebooks. 
+The exploratory notebooks are kept as a record of the development process. They aren't intended as documentation or reference. Techniques and code described in earlier notebooks might be superceded by newer approaches in later notebooks. 
+--------
+
 
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
