@@ -1,0 +1,101 @@
+column_name_english,description_english
+abundance,"Abundance of the tagged species; 0 - 10, TMTT (too many to tag), or CI1, CI2, CI3 for amphibians"
+scientific_name,"Binomial classification (Genus, species) of the species"
+confidence,Probability that BirdNET also detected the species when the tag and BirdNET window overlap
+hourly_weather_station_distance,Distance of the nearest weather station pulling daily metadata (in kilometers)
+daily_weather_station_distance,Distance of the nearest weather station pulling daily weather conditions (in kilometers)
+daily_weather_station_elevation,Elevation of the nearest weather station pulling daily weather conditions (in meters)
+hourly_weather_station_elevation,Elevation of the nearest weather station pulling hourly weather conditions (in meters)
+hide_location,Is the location hidden?
+latitude,Latitude
+longitude,Longitude
+method,Method the recording was processed as
+daily_weather_station_nm,Name of the nearest weather station pulling daily weather conditions
+hourly_weather_station_nm,Name of the nearest weather station pulling houly weather conditions
+organization,Organization acronym; the organization that the data belongs to
+buffer,Radius of the buffer around the location (in meters)
+species_code,Species code (American Ornithological Society four-letter short code assigned to species for ARU tagging)
+hourly_precipitation_mm,"The amount of precipitation (mm for rain, cm for snow) at the nearest weather station at the nearest hour"
+daily_snow_on_ground_cm,The daily accumulated snowfall (in centimeters) at the nearest weather station
+daily_max_temp,The daily maximum temperature at the nearest weather station
+daily_mean_temp,The daily mean temperature at the nearest weather station
+daily_min_temp,The daily mininum temperature at the nearest weather station
+daily_precipitation_mm,The daily precipitation (in millimeters) at the nearest weather station
+daily_total_rain_mm,The daily total rainfall (in millimeters) at the nearest weather station
+daily_total_snow_cm,The daily total snowfall (in centimeters) at the nearest weather station
+recording_date,The date of the recording (YYYY-MM-DD)
+hourly_weather_attributes,The description of the hourly weather at the nearest hour. Options include:
+hourly_dew_point,The dewpoint (in Celsius) recorded at the nearest weather station at the nearest hour
+hourly_humidex,The humidex or humidity index (in celsius) measures how hot the weather feels according to humidity and temperature recorded at the nrest weather at the nearest hour
+equipment_used,The make and model of the equipment used
+observer,The observer who conducted the survey
+location,The physical place on the landscape where the data was collected
+hourly_rel_humidity,The relative humidity (in percent concentration of water vapour present in the air) recorded at the nearest weather station at the nearest hour
+hourly_temp,The temperature (in Celsius) recorded at the nearest weather station at the nearest hour
+hourly_visibility_km,The visibility (in kilometers) recorded at the nearest weather at the nearest hour
+hourly_wind_direction,The wind direction (in degrees) at the nearest weather station at the nearest hour
+hourly_wind_chill,The windchill or lowering of temperature due to wind speed and air temperature (measured in celsius) recorded at the nearest weather at the nearest hour
+audio_length,Length of the audio recording
+clip_channel_used,Default channel (left or right) used to display the species verification tag
+hourly_wind_speed,The wind speed (in kilometers per hour) at the nearest weather station at the nearest hour
+hourly_station_pressure,The atmospheric pressure (in kilopascals) recorded at the nrest weather at the nearest hour
+is_verified,"If TRUE, the tag has been verified"
+land_features,A comma-delimited list of the land features at the location
+left_dc_offset,DC offset on the left channel of the recording
+left_freq_filter_tag_dc_offset,DC offset of the tag on the left channel
+left_freq_filter_tag_max_level,Maximum dBFS of the tag on the left channel
+left_freq_filter_tag_min_level,Minimum dBFS of the tag on the left channel
+left_freq_filter_tag_peak_level_dbfs,Peak level RMS dBFS of the tag on the left channel
+left_freq_filter_tag_pk_count,Peak dBFS count of the tag on the left channel
+left_freq_filter_tag_rms_peak_dbfs,Peak RMS dBFS of the tag on the left channel
+left_freq_filter_tag_rms_trough_dbfs,Trough RMS dBFS of the tag on the left channel
+left_full_freq_tag_dc_offset,DC offset of all frequencies within the time domain of the tag on the left channel
+left_full_freq_tag_max_level,Maximum dBFS of all frequencies within the time domain of the tag on the left channel
+left_full_freq_tag_min_level,Minimum dBFS of all frequencies within the time domain of the tag on the left channel
+left_full_freq_tag_peak_level_dbfs,Peak level dBFS of all frequencies bound by the time domain of the tag on the left channel
+left_full_freq_tag_pk_count,Peak dBFS count of all frequencies bound by the time domain of the tag on the left channel
+left_full_freq_tag_rms_peak_dbfs,Peak RMS dBFS of all frequencies bound by the time domain of the tag on the left channel
+left_full_freq_tag_rms_trough_dbfs,Trough RMS dBFS of all frequencies bound by the time domain of the tag on the left channel
+left_max_level,Maximum dBFS on the left channel of the recording
+left_min_level,Minimum dBFS on the left channel of the recording
+left_pk_count,Peak count on the left channel of the recording
+left_rms_peak_dbfs,Peak RMS dBFS on the left channel
+left_rms_peak_level_dbfs,Peak level RMS dBFS on the left channel
+left_rms_trough_dbfs,Trough RMS dBFS on the left channel
+max_tag_freq,The maximum frequency of the tag (in kilohertz)
+min_tag_freq,The minimum frequency of the tag (in kilohertz)
+project_name,The full name of the project
+right_dc_offset,DC offset on the right channel of the recording
+right_freq_filter_tag_dc_offset,DC offset of the tag on the right channel
+right_freq_filter_tag_max_level,Maximum dBFS of the tag on the right channel
+right_freq_filter_tag_min_level,Minimum dBFS of the tag on the right channel
+right_freq_filter_tag_peak_level_dbfs,Peak level RMS dBFS of the tag on the right channel
+right_freq_filter_tag_pk_count,Peak dBFS count of the tag on the right channel
+right_freq_filter_tag_rms_peak_dbfs,Peak RMS dBFS of the tag on the right channel
+right_freq_filter_tag_rms_trough_dbfs,Trough RMS dBFS of the tag on the right channel
+right_full_freq_tag_dc_offset,DC offset of all frequencies within the time domain of the tag on the right channel
+right_full_freq_tag_max_level,Maximum dBFS of all frequencies within the time domain of the tag on the right channel
+right_full_freq_tag_min_level,Minimum dBFS of all frequencies within the time domain of the tag on the right channel
+right_full_freq_tag_peak_level_dbfs,Peak level RMS dBFS of all frequencies bound by the time domain of the tag on the right channel
+right_full_freq_tag_pk_count,Peak dBFS count of all frequencies bound by the time domain of the tag on the right channel
+right_full_freq_tag_rms_peak_dbfs,Peak RMS dBFS of all frequencies bound by the time domain of the tag on the right channel
+right_full_freq_tag_rms_trough_dbfs,Trough RMS dBFS of all frequencies bound by the time domain of the tag on the right channel
+right_max_level,Maximum dBFS on the right channel of the recording
+right_min_level,Minimum dBFS on the right channel of the recording
+right_peak_level_dbfs,Peak level RMS dBFS on the right channel
+right_pk_count,Peak count on the right channel of the recording
+right_rms_peak_dbfs,Peak RMS dBFS on the right channel
+right_rms_trough_dbfs,Trough RMS dBFS on the right channel
+species_comments,
+species_common_name,
+tag_clip_status,"If Pending, the tag is still being prepared for verification"
+tag_duration_s,The duration of the tag (in seconds)
+tag_start_s,The start time of the tag (in seconds) from the start of the recording
+tagged_in_wildtrax,"If TRUE, the tag was created by a human (i.e. not imported via upload tags)"
+unique_name,Distinct individuals of the species
+url,
+verified_by,
+vocalization,"The vocalization type of the tag: song, call or non-vocal signal"
+window_end_time,End time of the 3-second BirdNET window from the start of the recording
+window_start_time,Start time of the 3-second BirdNET window from the start of the recording
+comments,Comments
