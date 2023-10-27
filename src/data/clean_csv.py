@@ -51,6 +51,23 @@ def process_raw_csv():
     # Remove the clips which don't contain a link to a clip
     meta.drop(meta.loc[meta.clip_url == "nan"].index, inplace=True)
 
+    # Remove clips from projects which might contain data which contaminates the dataset with duplicated or synthetic recordings.
+    # These projects are:
+    # - '2023 playback experiment'
+    # - 'ARU Test Project Model Comparisons 2021'
+    # - 'James bay lowlands resample' in case this is a duplicate of the other James Bay project
+    meta.drop(meta.loc[meta.project == "2023 Playback Experiment"].index, inplace=True)
+    meta.drop(
+        meta.loc[meta.project == "ARU Test Project Model Comparisons 2021"].index,
+        inplace=True,
+    )
+    meta.drop(
+        meta.loc[
+            meta.project == "CWS-Ontario Birds of James Bay Lowlands 2021 (Resample)"
+        ].index,
+        inplace=True,
+    )
+
     # Add a column to store file type derived from clip URL
     # meta["file_type"] = None
     def get_file_type(url: str) -> str:

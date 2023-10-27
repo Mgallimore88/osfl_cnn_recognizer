@@ -82,7 +82,7 @@ Project Organization
 
 --------
 A note on notebooks. 
-The exploratory notebooks are kept as a record of the development process. They aren't intended as documentation or reference. Techniques and code described in earlier notebooks might be superceded by newer approaches in later notebooks. 
+The exploratory notebooks are kept as a record of the development process. They aren't intended as documentation or reference. Techniques described in earlier notebooks might be superceded by newer approaches in later notebooks, and these notebooks might contain incomplete or experimental code. 
 --------
 
 
