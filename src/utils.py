@@ -1,5 +1,16 @@
 import matplotlib.pyplot as plt
 import geopandas as gpd
+import pandas as pd
+
+
+### Pandas ###
+def display_all(df):
+    """
+    Display all columns and rows of a dataframe.
+    """
+    with pd.option_context("display.max_columns", 70):
+        with pd.option_context("display.max_rows", 1000):
+            display(df)
 
 
 ### Location and GeoPandas ###

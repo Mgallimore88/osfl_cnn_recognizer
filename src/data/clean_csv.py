@@ -1,9 +1,10 @@
 # Preprocessing script to load raw csv file and create a modified, cleaned DataFrame as output.
 
 
-def process_raw_csv():
+def process_raw_csv(clean_all: bool = True):
     """
     Gets from raw training data csv file to cleaned metadata csv file.
+    set clean_all to False to skip over some assumptions made about the data - namely that the TMTT and call vocalizations should be removed.
 
     1. Load raw csv file
     2. Drop last entry since it's all NaN values.
@@ -27,6 +28,15 @@ def process_raw_csv():
     # Load the raw csv file
     meta = pd.read_csv(data_path / "raw/TrainingData_BU&Public_CWS_with_rec_links.csv")
 
+    if clean_all:
+        # Drop 'too many to tag' abundance tags.
+        tmtt_idxs = meta[meta.abundance == "TMTT"].index
+        meta.drop(tmtt_idxs, inplace=True)
+
+        # Drop non song vocalizations
+        not_song_idxs = meta[meta.vocalization != "Song"].index
+        meta.drop(not_song_idxs, inplace=True)
+
     # Drop last entry since it's all NaN values.
     meta.drop(meta.tail(1).index, inplace=True)
 
@@ -35,14 +45,6 @@ def process_raw_csv():
 
     # Change all the data types in the DataFrame to the types specified in in the preset_types.py
     meta = meta.astype(type_dict)
-
-    # Drop 'too many to tag' abundance tags.
-    tmtt_idxs = meta[meta.abundance == "TMTT"].index
-    meta.drop(tmtt_idxs, inplace=True)
-
-    # Drop non song vocalizations
-    not_song_idxs = meta[meta.vocalization != "Song"].index
-    meta.drop(not_song_idxs, inplace=True)
 
     # Drop recordings not labeled in wildtrax
     labeled_elsewhere_idxs = meta[meta.tagged_in_wildtrax == "f"].index

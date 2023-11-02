@@ -1,5 +1,8 @@
-# copyrighted referende material
+# copyrighted reference material
 references/birdsoftheworld/
+
+# credentials
+secrets.yml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -49,9 +52,6 @@ coverage.xml
 # Translations
 *.mo
 *.pot
-
-# Django stuff:
-*.log
 
 # Sphinx documentation
 docs/_build/
