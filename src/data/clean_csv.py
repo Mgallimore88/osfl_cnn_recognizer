@@ -6,16 +6,17 @@ def process_raw_csv(clean_all: bool = True):
     Gets from raw training data csv file to cleaned metadata csv file.
     set clean_all to False to skip over some assumptions made about the data - namely that the TMTT and call vocalizations should be removed.
 
-    1. Load raw csv file
-    2. Drop last entry since it's all NaN values.
-    3. Replace empty fields with -1 for verifier_id to enable import to pandas dataframe as int type.
-    4. Change all the data types in the DataFrame to the types specified in in the preset_types.py
-    5. Drop 'too many to tag' abundance tags.
-    6. Drop non song vocalizations
-    7. Drop recordings not labeled in wildtrax
-    8. Remove the clips which don't contain a link to a clip
-    9. Add a column to store file type derived from clip URL
-    10. Export the cleaned version of the database
+    -  Load raw csv file
+    -  Drop last entry since it's all NaN values.
+    - Replace empty fields with -1 for verifier_id to enable import to pandas dataframe as int type.
+    - Change all the data types in the DataFrame to the types specified in in the preset_types.py
+    - Drop 'too many to tag' abundance tags.
+    - Drop non song vocalizations
+    - Drop recordings not labeled in wildtrax
+    - Remove the clips which don't contain a link to a clip
+    - Remove duplicated clips from the database
+    - Add a column to store file type derived from clip URL
+    - Export the cleaned version of the database
     """
     import pandas as pd
     import re
@@ -69,6 +70,12 @@ def process_raw_csv(clean_all: bool = True):
         ].index,
         inplace=True,
     )
+
+    def filter_duplicate_clips(df: pd.DataFrame) -> pd.DataFrame:
+        """Filter out duplicate clips based on tag_id"""
+        return df.loc[df.tag_id.drop_duplicates().index]
+
+    meta = filter_duplicate_clips(meta)
 
     # Add a column to store file type derived from clip URL
     # meta["file_type"] = None
