@@ -13,27 +13,72 @@ def display_all(df):
             display(df)
 
 
+### Graphing ###
+def print_stats(df):
+    """
+    simple stats
+    """
+    return df.describe()
+
+
 ### Location and GeoPandas ###
-def plot_locations(df, title="clip_locations"):
+def plot_locations(
+    df,
+    feature="project",
+    title="Clip Locations",
+    num_features=10,
+    forced_features: list = [None],
+):
     """
-    Take a dataframe and plot the lattitude and longitude columns on a map of Canada.
+    Plot points from a DataFrame on a map of Canada with a colour legend.
+    The points will be coloured based on the top n unique values in the features column.
+
+    Parameters:
+    - df: DataFrame or GeoDataFrame with 'latitude' and 'longitude' and other feature columns.
+    - features: the name of the column used to colour the points.
+    - title: the title of plot
+    - num_classes: the number of unique values in the features column to plot.
+    - forced_classes: additional classes to include in the plot regardless of their count in the features column.
     """
-    # initialize an axis
-    fig, ax = plt.subplots(figsize=(10, 10))
-    # plot map on axis
-    countries = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
-    countries[countries["name"] == "Canada"].plot(color="lightgrey", ax=ax)
-    # plot points
-    df.plot(
-        x="longitude",
-        y="latitude",
-        kind="scatter",
-        s=40,
-        alpha=0.01,
-        c="red",
-        title=title,
-        ax=ax,
+    # Convert DataFrame to GeoDataFrame if needed
+    if not isinstance(df, gpd.GeoDataFrame):
+        df = gpd.GeoDataFrame(
+            df, geometry=gpd.points_from_xy(df.longitude, df.latitude)
+        )
+
+    # Load Canada map
+    canada = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres")).query(
+        "name == 'Canada'"
     )
-    # add grid
-    ax.grid(alpha=0.5)
+
+    # Determine feature labels for coloring
+    top_features = df[feature].value_counts().nlargest(num_features).index.to_list()
+    all_features = ["Other"] + top_features + forced_features
+    df["_color"] = df[feature].where(df[feature].isin(all_features), "Other")
+
+    # Create colormap
+    color_map = plt.cm.get_cmap("tab20", len(all_features))
+
+    # Plot base map
+    fig, ax = plt.subplots(figsize=(15, 5))
+    canada.plot(color="lightgrey", ax=ax)
+
+    # Plot points with legend
+    for i, feature_label in enumerate(all_features):
+        color = "grey" if feature_label == "Other" else color_map(i)
+        points = df[df["_color"] == feature_label]
+        points.plot(
+            ax=ax, marker="o", color=color, label=feature_label, markersize=5, alpha=0.5
+        )
+
+    # Set aspect to equal for maintaining scale
+    ax.set_aspect("equal", adjustable="datalim")
+
+    # Customize and show plot
+    ax.set_title(title)
+    ax.legend(title=feature.capitalize(), markerscale=2)
     plt.show()
+
+    # Example usage
+    # plot_locations(df_lite, feature='species_code', num_features=10, forced_features=['OSFL'])
+    # plot_locations(df_lite, feature='project', num_features=10, forced_features=['CWS-Ontario Birds of James Bay Lowlands 2021'])
