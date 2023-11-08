@@ -25,7 +25,7 @@ def print_stats(df):
 def plot_locations(
     df,
     feature="project",
-    title="Clip Locations",
+    title="Tag Locations",
     num_features=10,
     forced_features: list = [None],
 ):
@@ -65,7 +65,11 @@ def plot_locations(
 
     # Plot points with legend
     for i, feature_label in enumerate(all_features):
-        color = "grey" if feature_label == "Other" else color_map(i)
+        color = (
+            "grey"
+            if feature_label == "Other" and not feature_label in forced_features
+            else color_map(i)
+        )
         points = df[df["_color"] == feature_label]
         points.plot(
             ax=ax, marker="o", color=color, label=feature_label, markersize=5, alpha=0.5
