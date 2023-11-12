@@ -1,9 +1,24 @@
 ==============================
 osfl_recognizer
 ==============================
+Project: 
+This project develops a method to build and train a convolutional neural network to recognise 
+the presence or absence of a single bird species in an audio recording. 
 
-cnn for recognizing olive sided flycatcher calls in audio recordings.
 
+The project is developed in two parts: 
+
+Part 1 describes the process of model development, such that anybody wanting to train a similar model in the future can see the process and will have a good starting point to build upon. 
+
+Part 2 gives a detailed "how to" document on model usage for the OSFL recognizer built during this project. The model can be used to process audio files and outputs a .csv file containing probability of detection for each 3 second segment of the recording. 
+
+Source code is located in the .src folder.
+
+The notebooks folder contains reports which are intended to serve as a source for the documentation of the project. 
+
+==============================
+Installation
+==============================
 For manual installation,
 - install conda
 - open bash terminal then run 
@@ -12,13 +27,30 @@ conda activate osfl
 pip install opensoundscape==0.10.0
 conda install -c fastai fastai
 
+==============================
+Repeating the process developed in this project
+1. get access to WildTrax database and download a csv file containing human labelled species tag timestamps
+2. preprocess the csv file to remove erroneous, duplicated, anomalous and low quality data.
+3. Download a sample of audio files from the 'clip_url' links for a variety of species
+4. Convert these to spectrograms using OpenSoundScape
+5. Train a quick model using the fastai library and out of the box settings to distinguish between bird species. Use the model to get insight into what causes most confusion / highest loss
+
+6. Seperate out a withheld test set of 20% of the recording locations from the database and keep these isolated from future training.
+7. Create a further train/validation split
+8. Create a dataset of positive and negative class audio samples
+9. train a model using these samples
+10. iterate the training process using various combinations of mixup, data augmentation, model architectures and hyperparameters until good performance is acheived as measured on the validation set. 
+11. Increase the size of the dataset used to train with.
+11. Confirm the model's performance by running on the withheld test set. 
+12. Export a model and report performance metrics. 
+==============================
 
 ==============================
-Roadmap for dev
+Roadmap for development
 ==============================
 - train initial model on spectrograms with default settings for everything
 - curate a good no-call dataset
-- curate sensible test and validation splits
+- make sensible test and validation splits
 - re-train the model and try different architectures and models pretrained on different datasets
 - iterate through development until model performance is improved
 - try different data augmentation techniques, spectrogram parameters, and model parameters
