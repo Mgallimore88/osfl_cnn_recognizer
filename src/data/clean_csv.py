@@ -6,14 +6,16 @@ def process_raw_csv(clean_all: bool = True):
     Gets from raw training data csv file to cleaned metadata csv file.
     set clean_all to False to skip over some assumptions made about the data - namely that the TMTT and call vocalizations should be removed.
 
-    -  Load raw csv file
-    -  Drop last entry since it's all NaN values.
+    - Load raw csv file
+    - Drop last entry since it's all NaN values.
     - Replace empty fields with -1 for verifier_id to enable import to pandas dataframe as int type.
     - Change all the data types in the DataFrame to the types specified in in the preset_types.py
     - Drop 'too many to tag' abundance tags.
     - Drop non song vocalizations
     - Drop recordings not labeled in wildtrax
     - Remove the clips which don't contain a link to a clip
+    - Remove any clips which belong to a recording with a missing recording_url
+    - Remove clips from projects which might contain data which contaminates the dataset with duplicated or synthetic recordings.
     - Remove duplicated clips from the database
     - Add a column to store file type derived from clip URL
     - Export the cleaned version of the database
@@ -54,22 +56,23 @@ def process_raw_csv(clean_all: bool = True):
     # Remove the clips which don't contain a link to a clip
     meta.drop(meta.loc[meta.clip_url == "nan"].index, inplace=True)
 
-    # Remove clips from projects which might contain data which contaminates the dataset with duplicated or synthetic recordings.
+    # Remove clips from projects which might contain duplicated or synthetic recordings.
     # These projects are:
     # - '2023 playback experiment'
     # - 'ARU Test Project Model Comparisons 2021'
     # - 'James bay lowlands resample' in case this is a duplicate of the other James Bay project
-    meta.drop(meta.loc[meta.project == "2023 Playback Experiment"].index, inplace=True)
-    meta.drop(
-        meta.loc[meta.project == "ARU Test Project Model Comparisons 2021"].index,
-        inplace=True,
-    )
-    meta.drop(
-        meta.loc[
-            meta.project == "CWS-Ontario Birds of James Bay Lowlands 2021 (Resample)"
-        ].index,
-        inplace=True,
-    )
+    # - 'Wildtrax Demo 2020'
+
+    removed_projects = [
+        "2023 Playback Experiment",
+        "ARU Test Project Model Comparisons 2021",
+        "CWS-Ontario Birds of James Bay Lowlands 2021 (Resample)",
+        "Wildtrax Demo 2020",
+    ]
+    meta.drop(meta.loc[meta.project.isin(removed_projects)].index, inplace=True)
+
+    # Remove any clips which belong to a recording with a missing recording_url
+    meta.drop(meta.loc[meta.recording_url == "nan"].index, inplace=True)
 
     def filter_duplicate_clips(df: pd.DataFrame) -> pd.DataFrame:
         """Filter out duplicate clips based on tag_id"""
