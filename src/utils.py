@@ -4,13 +4,35 @@ import pandas as pd
 
 
 ### Pandas ###
-def display_all(df):
+def display_all(df, max_rows=None, max_columns=None):
     """
-    Display all columns and rows of a dataframe.
+    Display all columns and rows of a dataframe without truncating.
     """
-    with pd.option_context("display.max_columns", 70):
-        with pd.option_context("display.max_rows", 1000):
-            display(df)
+    with pd.option_context(
+        "display.max_rows", max_rows, "display.max_columns", max_columns
+    ):
+        display(df)
+
+
+keep_cols = [
+    "organization",
+    "project",
+    "project_id",
+    "location_id",
+    "recording_id",
+    "recording_date_time",
+    "species_code",
+    "species_common_name",
+    "detection_time",
+    "task_duration",
+    "tag_duration",
+    "tag_id",
+    "clip_url",
+    "recording_url",
+    "latitude",
+    "longitude",
+    "file_type",
+]
 
 
 ### Graphing ###
