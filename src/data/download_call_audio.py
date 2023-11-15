@@ -1,17 +1,18 @@
-# script to take a cleaned DataFrame as input and output a set of audio files.
+# Takes a cleaned DataFrame as input and downloads a set of audio clips from WildTrax from the clip_url column.
 # A sample of 1000 olive sided flycatcher recordings is used for speeding up early development.
 
 import pandas as pd
 from pathlib import Path
 import requests
 
+
 def choose_osfl_clips(df, n=1000):
     osfl_idxs = df[df.species_code == "OSFL"].index
     osfls = df.loc[osfl_idxs]
     return df.sample(n, random_state=42)
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     data_path = Path("../../data")
 
     meta = pd.read_pickle(data_path / "interim/processed_metadata.pkl")
@@ -19,14 +20,11 @@ if __name__ == "__main__":
 
     sample_osfls = choose_osfl_clips(meta)
 
-
-
     def exists(fname):
         """
         check to see whether a file exists
         """
         return Path.exists(fname)
-
 
     # Download audio clips
     print(f"downloading {len(sample_osfls)} clips")

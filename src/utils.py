@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import geopandas as gpd
 import pandas as pd
+from IPython.display import display
 
 
 ### Pandas ###
@@ -14,6 +15,7 @@ def display_all(df, max_rows=None, max_columns=None):
         display(df)
 
 
+### project dataframe ###
 keep_cols = [
     "organization",
     "project",
@@ -32,6 +34,7 @@ keep_cols = [
     "latitude",
     "longitude",
     "file_type",
+    "media_url",
 ]
 
 
