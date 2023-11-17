@@ -11,6 +11,9 @@ __pycache__/
 # C extensions
 *.so
 
+# audio files from opensoundscape examples
+*.wav
+
 # Distribution / packaging
 .Python
 env/
