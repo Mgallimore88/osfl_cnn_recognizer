@@ -7,7 +7,7 @@ import re
 
 
 # Load the processed DataFrame
-data_path = Path("../../data/")
+data_path = Path.cwd() / "data"
 df = pd.read_pickle(Path.joinpath(data_path, "interim", "processed_metadata.pkl"))
 
 

@@ -37,9 +37,9 @@ def from_url(
     Path.mkdir(output_path, parents=True, exist_ok=True)
     skipped_files = 0
     for i in df.index:
+        filename = i  # for clarity - the index is also the filename
         recording_url = df.loc[i, url_col]
-        extension = df.file_type[i]
-        file = Path.joinpath(output_path, f"recording-{df.recording_id[i]}.{extension}")
+        file = Path.joinpath(output_path, filename)
 
         if Path.exists(file):
             skipped_files += 1
