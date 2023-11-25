@@ -31,6 +31,7 @@ keep_cols = [
     "tag_id",
     "clip_url",
     "recording_url",
+    "task_method",
     "latitude",
     "longitude",
     "file_type",
