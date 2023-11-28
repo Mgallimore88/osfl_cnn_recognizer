@@ -8,6 +8,7 @@ def from_url(
     url_col: str,
     output_path: Path,
     target: str | None = None,
+    random: bool | None = True,
     n: int | None = None,
 ) -> None:
     """
@@ -18,6 +19,7 @@ def from_url(
     - url_col: name of the URL column
     - output_path: path to save the downloaded files
     - target: species code to filter for
+    - random: whether to randomly sample the data (True) or take the first n rows (False)
     - n: number of samples to download
     """
 
@@ -30,14 +32,17 @@ def from_url(
 
     # choose n samples if specified
     if n is not None:
-        df = df.sample(n, random_state=42)
+        if random == True:
+            df = df.sample(n, random_state=42)
+        else:
+            df = df.head(n)
 
     # Download audio clips
     print(f"downloading {len(df)} clips")
     Path.mkdir(output_path, parents=True, exist_ok=True)
     skipped_files = 0
     for i in df.index:
-        filename = i  # for clarity - the index is also the filename
+        filename = df.filename.loc[i]
         recording_url = df.loc[i, url_col]
         file = Path.joinpath(output_path, filename)
 
