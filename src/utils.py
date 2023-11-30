@@ -36,6 +36,7 @@ keep_cols = [
     "longitude",
     "file_type",
     "media_url",
+    "individual_order",
 ]
 
 
