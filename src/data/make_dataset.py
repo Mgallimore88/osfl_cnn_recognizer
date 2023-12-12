@@ -2,12 +2,7 @@
 import click
 import logging
 from pathlib import Path
-# from dotenv import find_dotenv, load_dotenv
-
-# commonly used functions for notebooks
-def display_all(df, rows=10, cols=200):
-    with pd.option_context("display.max_columns", cols):
-           display(df)
+from dotenv import find_dotenv, load_dotenv
 
 
 @click.command()

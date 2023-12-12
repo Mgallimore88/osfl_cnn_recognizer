@@ -1,0 +1,3 @@
+https://github.com/ropensci/ohun
+ohun could be a useful tool to find signal in long audio recordings. 
+Found from the conservation tech directory https://conservationtech.directory/

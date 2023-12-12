@@ -1,16 +1,43 @@
 import matplotlib.pyplot as plt
 import geopandas as gpd
 import pandas as pd
+from IPython.display import display
 
 
 ### Pandas ###
-def display_all(df):
+def display_all(df, max_rows=None, max_columns=None):
     """
-    Display all columns and rows of a dataframe.
+    Display all columns and rows of a dataframe without truncating.
     """
-    with pd.option_context("display.max_columns", 70):
-        with pd.option_context("display.max_rows", 1000):
-            display(df)
+    with pd.option_context(
+        "display.max_rows", max_rows, "display.max_columns", max_columns
+    ):
+        display(df)
+
+
+### project dataframe ###
+keep_cols = [
+    "organization",
+    "project",
+    "project_id",
+    "location_id",
+    "recording_id",
+    "recording_date_time",
+    "species_code",
+    "species_common_name",
+    "detection_time",
+    "task_duration",
+    "tag_duration",
+    "tag_id",
+    "clip_url",
+    "recording_url",
+    "task_method",
+    "latitude",
+    "longitude",
+    "file_type",
+    "media_url",
+    "individual_order",
+]
 
 
 ### Graphing ###
@@ -84,5 +111,5 @@ def plot_locations(
     plt.show()
 
     # Example usage
-    # plot_locations(df_lite, feature='species_code', num_features=10, forced_features=['OSFL'])
+    # plot_locations(df, feature='species_code', num_features=10, forced_features=['OSFL'])
     # plot_locations(df_lite, feature='project', num_features=10, forced_features=['CWS-Ontario Birds of James Bay Lowlands 2021'])
