@@ -1,6 +1,9 @@
 # copyrighted reference material
 references/birdsoftheworld/
 
+# oss tutorials
+notebooks/exploratory_nbs/opensoundscape-tutorials/
+
 # credentials
 secrets.yml
 
