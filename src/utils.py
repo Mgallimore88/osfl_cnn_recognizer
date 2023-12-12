@@ -111,5 +111,5 @@ def plot_locations(
     plt.show()
 
     # Example usage
-    # plot_locations(df_lite, feature='species_code', num_features=10, forced_features=['OSFL'])
+    # plot_locations(df, feature='species_code', num_features=10, forced_features=['OSFL'])
     # plot_locations(df_lite, feature='project', num_features=10, forced_features=['CWS-Ontario Birds of James Bay Lowlands 2021'])

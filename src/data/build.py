@@ -99,7 +99,8 @@ def dataset_from_df(
     ### Use opensoundscape methods to create split intervals
 
     # create a spectrogram preprocessor
-    pre = opso.SpectrogramPreprocessor(sample_duration=3.0)
+    # force outputs to be same size
+    pre = opso.SpectrogramPreprocessor(sample_duration=3.0, width=224 * 3, height=224)
 
     # re-index the dataframe with 'relative_path' as the index ready for AudioFileDataset and AudioSplittingDataset
     downloaded_paths_df = pd.DataFrame(df_downloaded_recordings.index).set_index(
@@ -181,4 +182,4 @@ def dataset_from_df(
 
 
 if __name__ == "__main__":
-    build_labelled_dataset(df, target_species="OSFL", download_n=0)
+    dataset_from_df(df, target_species="OSFL", download_n=0)
