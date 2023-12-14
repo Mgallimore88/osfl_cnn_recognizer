@@ -28,15 +28,17 @@ recordings_metadata_dict = {
     "file_type": "first",
     "media_url": "first",  # for debugging
     "individual_order": "max",
+    "location_id": "first",
 }
 
 
 def dataset_from_df(
     df: pd.DataFrame, target_species="OSFL", download_n: int = 0
-) -> opso.AudioFileDataset:
+) -> tuple[opso.AudioFileDataset, opso.AudioFileDataset]:
     """
     Returns a labelled dataset from a cleaned dataframe.
     The audio starts out as long recordings, which are downloaded from the recording_url field in the dataframe (not yet publicly available). Segements containing target or non-target audio are identified by the tag window onset and duration times along with the tagging method used for that recording. The audio is then split into clips, and the clips are labelled as containing target or non-target audio. The clips are then passed into an AudioFileDataset, which returns a spectrogram tensor and a label tensor for each clip.
+    Finally the dataset is split into training and validation sets.
     """
 
     # load data including species timestamps for label calculation
@@ -166,19 +168,47 @@ def dataset_from_df(
     # Set multi index for passing into AudioFileDataset
     df.set_index(["file", "start_time", "end_time"], inplace=True)
 
-    audio_ds = opso.AudioFileDataset(
-        df[["target_presence", "target_absence"]],
+    # Split the dataset into training and validation sets
+    def make_train_valid_split(df):
+        # Get unique location_ids and shuffle them
+        unique_locations = df["location_id"].unique()
+        np.random.shuffle(unique_locations)
+
+        # Split the unique location_ids (80% train, 20% valid)
+        split_index = int(len(unique_locations) * 0.80)
+        train_locations = unique_locations[:split_index]
+        valid_locations = unique_locations[split_index:]
+
+        # Mark the rows in original DataFrame
+        df["is_valid"] = df["location_id"].isin(valid_locations)
+
+        # Split the DataFrame into two based on 'is_valid'
+        train_df = df[df["is_valid"] == False]
+        valid_df = df[df["is_valid"] == True]
+
+        return train_df, valid_df
+
+    train_df, valid_df = make_train_valid_split(df)
+
+    train_ds = opso.AudioFileDataset(
+        train_df[["target_presence", "target_absence"]],
         pre,
     )
 
-    sample_idxs = random.sample(range(len(audio_ds)), 5)
+    valid_ds = opso.AudioFileDataset(
+        valid_df[["target_presence", "target_absence"]],
+        pre,
+        bypass_augmentations=True,  # remove preprocessing for validation set
+    )
 
-    tensors = [audio_ds[i].data for i in sample_idxs]
-    labels = [audio_ds[i].labels.target_presence for i in sample_idxs]
+    sample_idxs = random.sample(range(len(train_df)), 5)
+
+    tensors = [train_ds[i].data for i in sample_idxs]
+    labels = [train_ds[i].labels.target_presence for i in sample_idxs]
 
     _ = show_tensor_grid(tensors, 2, labels=labels)
 
-    return audio_ds
+    return train_ds, valid_ds
 
 
 if __name__ == "__main__":
