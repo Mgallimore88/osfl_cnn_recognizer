@@ -33,7 +33,10 @@ recordings_metadata_dict = {
 
 
 def dataset_from_df(
-    df: pd.DataFrame, target_species="OSFL", download_n: int = 0
+    df: pd.DataFrame,
+    target_species="OSFL",
+    download_n: int = 0,
+    one_class: bool = False,
 ) -> tuple[opso.AudioFileDataset, opso.AudioFileDataset]:
     """
     Returns a labelled dataset from a cleaned dataframe.
@@ -83,6 +86,7 @@ def dataset_from_df(
         recordings.filename.isin(downloaded_recordings)
     ]
     df_not_downloaded = recordings.loc[~recordings.filename.isin(downloaded_recordings)]
+    print(f"{len(df_not_downloaded)} not downloaded")
 
     def download(n: int = 1):
         """
@@ -132,7 +136,7 @@ def dataset_from_df(
     def clip_contains_target_tag(row: pd.Series):
         """
         Adds a row to dataframe indicating presence of target.
-        If the detection onset plus duration falls within the clip, return True. Else return False.
+        If the detection onset plus duration falls within the clip, return 1. Else return 0.
         """
         start_time = row.start_time
         end_time = row.end_time
@@ -140,23 +144,23 @@ def dataset_from_df(
         tag_duration = row.tag_duration
         for det, dur in zip(detection_time, tag_duration):
             if det >= start_time and det + dur <= end_time:
-                return True
-        return False
+                return float(1)
+        return float(0)
 
     df["target_presence"] = df.apply(clip_contains_target_tag, axis=1)
 
     # calculate target absence
     def clip_is_before_first_tag(row):
         """
-        Returns True if the end of the clip is before the start of the first detection.
+        Returns 1 if the end of the clip is before the start of the first detection.
         """
         end_time = row.end_time
         detection_time = row.detection_time
 
         if end_time < detection_time[0]:
-            return True
+            return float(1)
         else:
-            return False
+            return float(0)
 
     df["target_absence"] = df.apply(clip_is_before_first_tag, axis=1)
 
@@ -190,23 +194,33 @@ def dataset_from_df(
 
     train_df, valid_df = make_train_valid_split(df)
 
-    train_ds = opso.AudioFileDataset(
-        train_df[["target_presence", "target_absence"]],
-        pre,
-    )
-
-    valid_ds = opso.AudioFileDataset(
-        valid_df[["target_presence", "target_absence"]],
-        pre,
-        bypass_augmentations=True,  # remove preprocessing for validation set
-    )
+    if one_class:
+        train_ds = opso.AudioFileDataset(
+            train_df[["target_presence"]],
+            pre,
+        )
+        valid_ds = opso.AudioFileDataset(
+            valid_df[["target_presence"]],
+            pre,
+            bypass_augmentations=True,  # remove preprocessing for validation set
+        )
+    else:
+        train_ds = opso.AudioFileDataset(
+            train_df[["target_presence", "target_absence"]],
+            pre,
+        )
+        valid_ds = opso.AudioFileDataset(
+            valid_df[["target_presence", "target_absence"]],
+            pre,
+            bypass_augmentations=True,  # remove preprocessing for validation set
+        )
 
     sample_idxs = random.sample(range(len(train_df)), 5)
 
-    tensors = [train_ds[i].data for i in sample_idxs]
-    labels = [train_ds[i].labels.target_presence for i in sample_idxs]
+    sample_tensors = [train_ds[i].data for i in sample_idxs]
+    sample_labels = [train_ds[i].labels.target_presence for i in sample_idxs]
 
-    _ = show_tensor_grid(tensors, 2, labels=labels)
+    _ = show_tensor_grid(sample_tensors, 2, labels=sample_labels)
 
     return train_ds, valid_ds
 

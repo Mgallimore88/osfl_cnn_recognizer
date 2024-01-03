@@ -11,6 +11,11 @@ secrets.yml
 __pycache__/
 *.py[cod]
 
+# weights and biases files
+/wandb/
+notebooks/exploratory_nbs/wandb/
+notebooks/exploratory_nbs/epoch*
+
 # C extensions
 *.so
 
