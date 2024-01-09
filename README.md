@@ -1,6 +1,9 @@
 ==============================
+
 osfl_recognizer
+
 ==============================
+
 Project: 
 This project develops a method to build and train a convolutional neural network to recognise 
 the presence or absence of a single bird species in an audio recording. 
