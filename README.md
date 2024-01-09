@@ -5,6 +5,8 @@ Project:
 This project develops a method to build and train a convolutional neural network to recognise 
 the presence or absence of a single bird species in an audio recording. 
 
+Note that this project is unfinished and the readme is a template of intended work. 
+
 
 The project is developed in two parts: 
 
