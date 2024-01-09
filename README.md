@@ -1,8 +1,6 @@
-==============================
-
+--------
 osfl_recognizer
-
-==============================
+--------
 
 Project: 
 This project develops a method to build and train a convolutional neural network to recognise 
@@ -20,12 +18,9 @@ Part 2 gives a detailed "how to" document on model usage for the OSFL recognizer
 Source code is located in the .src folder.
 
 The notebooks folder contains reports which are intended to serve as a source for the documentation of the project. 
-
-==============================
-
+--------
 Installation
-
-==============================
+--------
 For manual installation,
 - install conda
 - open bash terminal then run 
@@ -34,8 +29,8 @@ conda activate osfl
 pip install opensoundscape==0.10.0
 conda install -c fastai fastai
 
-==============================
 
+--------
 Repeating the process developed in this project
 1. get access to WildTrax database and download a csv file containing human labelled species tag timestamps
 2. preprocess the csv file to remove erroneous, duplicated, anomalous and low quality data.
@@ -52,13 +47,10 @@ Repeating the process developed in this project
 11. Confirm the model's performance by running on the withheld test set. 
 12. Export a model and report performance metrics.
 
-==============================
 
-==============================
-
+--------
 Roadmap for development
-
-==============================
+--------
 - train initial model on spectrograms with default settings for everything
 - curate a good no-call dataset
 - make sensible test and validation splits
@@ -75,8 +67,7 @@ Roadmap for development
 
 
 Project Organization
-
-==============================
+--------
 
     ├── LICENSE
     ├── Makefile           <- Makefile with commands like `make data` or `make train`
@@ -125,10 +116,8 @@ Project Organization
 
 
 --------
-
 A note on notebooks. 
 The exploratory notebooks are kept as a record of the development process. They aren't intended as documentation or reference. Techniques described in earlier notebooks might be superceded by newer approaches in later notebooks, and these notebooks might contain incomplete or experimental code. 
-
 --------
 
 
