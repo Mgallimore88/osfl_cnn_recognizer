@@ -127,8 +127,14 @@ def dataset_from_df(
     df = clip_splits.merge(df_downloaded_recordings, left_on="file", right_index=True)
 
     # filter for recordings tagged using 1SPT or 1SPM methods
-    spt_recs = df.loc[(df.task_method == "1SPT") | (df.task_method == "1SPM")].file
-    df = df.loc[df.file.isin(spt_recs)]
+    keep_tasks = df.loc[
+        (
+            df.task_method.isna()  # no restrictions on tagging
+            | (df.task_method == "1SPT")
+            | (df.task_method == "1SPM")
+        )
+    ].file
+    df = df.loc[df.file.isin(keep_tasks)]
 
     ### Create labels for each clip ###
 
@@ -140,9 +146,9 @@ def dataset_from_df(
         """
         start_time = row.start_time
         end_time = row.end_time
-        detection_time = row.detection_time
-        tag_duration = row.tag_duration
-        for det, dur in zip(detection_time, tag_duration):
+        detection_times = row.detection_time
+        tag_durations = row.tag_duration
+        for det, dur in zip(detection_times, tag_durations):
             if det >= start_time and det + dur <= end_time:
                 return float(1)
         return float(0)
@@ -164,13 +170,40 @@ def dataset_from_df(
 
     df["target_absence"] = df.apply(clip_is_before_first_tag, axis=1)
 
+    def report_counts(df: pd.DataFrame, info: str = ""):
+        total_target_tags = (
+            f"total available human labelled target tags = {len(target_df)}"
+        )
+        task_methods = f"recordings per task method = \n {df.task_method.value_counts(dropna=False)}"
+        presence_absence_counts = df.groupby("task_method", dropna=False).agg(
+            {"target_presence": "sum", "target_absence": "sum"}
+        )
+        targets = f"\n total target clips =  {len(df.loc[df.target_presence == True])}"
+        absences = f"\n total absence clips =  {len(df.loc[df.target_absence == True])}"
+        undefined = f"\n undefined {len(df.loc[(df.target_presence == False)][(df.target_absence == False)])}"
+
+        print("--------------------------------------------------")
+        print(info)
+        print(total_target_tags)
+        print(task_methods)
+        print(presence_absence_counts)
+        print(targets)
+        print(absences)
+        print(undefined)
+
+        return
+
+    report_counts(df, "before filtering undefined clips")
+
     # filter out the rest of the clips because these are made up from
-    # - partial overlap: audio containing only part of the target call. If we use an overlap of 0.5 at inference, and the window is longer than the max target length, then we should always have one clip that contains the whole target call during inference.
+    # - partial overlap: audio containing only part of the target call. If we use an overlap of 0.5 at inference, and the window is longer than the max target length, then we should always have at least one clip that contains the whole target call during inference.
     # - audio from after the first target tag: this might contain unlabeled target calls.
     df = df.drop(df.loc[df.target_presence == False][df.target_absence == False].index)
 
     # Set multi index for passing into AudioFileDataset
     df.set_index(["file", "start_time", "end_time"], inplace=True)
+
+    report_counts(df, "after filtering undefined clips")
 
     # Split the dataset into training and validation sets
     def make_train_valid_split(df):
