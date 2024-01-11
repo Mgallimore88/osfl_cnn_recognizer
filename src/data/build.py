@@ -127,14 +127,14 @@ def dataset_from_df(
     df = clip_splits.merge(df_downloaded_recordings, left_on="file", right_index=True)
 
     # filter for recordings tagged using 1SPT or 1SPM methods
-    keep_tasks = df.loc[
+    keep_recs = df.loc[
         (
             df.task_method.isna()  # no restrictions on tagging
             | (df.task_method == "1SPT")
             | (df.task_method == "1SPM")
         )
     ].file
-    df = df.loc[df.file.isin(keep_tasks)]
+    df = df.loc[df.file.isin(keep_recs)]
 
     ### Create labels for each clip ###
 
@@ -171,25 +171,28 @@ def dataset_from_df(
     df["target_absence"] = df.apply(clip_is_before_first_tag, axis=1)
 
     def report_counts(df: pd.DataFrame, info: str = ""):
-        total_target_tags = (
-            f"total available human labelled target tags = {len(target_df)}"
+        total_target_tags = len(
+            target_df.loc[target_df.task_method.isin(["1SPT", "1SPM", np.nan])]
         )
-        task_methods = f"recordings per task method = \n {df.task_method.value_counts(dropna=False)}"
+        task_methods = df.task_method.value_counts(dropna=False)
         presence_absence_counts = df.groupby("task_method", dropna=False).agg(
             {"target_presence": "sum", "target_absence": "sum"}
         )
-        targets = f"\n total target clips =  {len(df.loc[df.target_presence == True])}"
-        absences = f"\n total absence clips =  {len(df.loc[df.target_absence == True])}"
-        undefined = f"\n undefined {len(df.loc[(df.target_presence == False)][(df.target_absence == False)])}"
+        targets = len(df.loc[df.target_presence == True])
+        absences = len(df.loc[df.target_absence == True])
+        undefined = len(
+            df.loc[(df.target_presence == False)][(df.target_absence == False)]
+        )
 
         print("--------------------------------------------------")
         print(info)
-        print(total_target_tags)
-        print(task_methods)
+        print(f"total available human labelled target tags = {total_target_tags}")
+        print(f"recordings per task method = \n {task_methods}")
+        print(f"total recordings = {len(df)}")
         print(presence_absence_counts)
-        print(targets)
-        print(absences)
-        print(undefined)
+        print(f"total target clips =  {targets}")
+        print(f"total absence clips =  {absences}")
+        print(f"undefined {undefined}")
 
         return
 
