@@ -37,7 +37,7 @@ def dataset_from_df(
     target_species="OSFL",
     download_n: int = 0,
     one_class: bool = False,
-) -> tuple[opso.AudioFileDataset, opso.AudioFileDataset]:
+) -> tuple[opso.AudioFileDataset, opso.AudioFileDataset, pd.Series, pd.Series]:
     """
     Returns a labelled dataset from a cleaned dataframe.
     The audio starts out as long recordings, which are downloaded from the recording_url field in the dataframe (not yet publicly available). Segements containing target or non-target audio are identified by the tag window onset and duration times along with the tagging method used for that recording. The audio is then split into clips, and the clips are labelled as containing target or non-target audio. The clips are then passed into an AudioFileDataset, which returns a spectrogram tensor and a label tensor for each clip.
@@ -181,17 +181,18 @@ def dataset_from_df(
         targets = len(df.loc[df.target_presence == True])
         absences = len(df.loc[df.target_absence == True])
         undefined = len(
-            df.loc[(df.target_presence == False)][(df.target_absence == False)]
+            df.loc[(df.target_presence == False)].loc[(df.target_absence == False)]
         )
 
-        print("--------------------------------------------------")
+        print("\n--------------------------------------------------")
         print(info)
-        print(f"total available human labelled target tags = {total_target_tags}")
         print(f"recordings per task method = \n {task_methods}")
         print(f"total recordings = {len(df)}")
+        print("\nTags generated from each tagging method:")
         print(presence_absence_counts)
         print(f"total target clips =  {targets}")
         print(f"total absence clips =  {absences}")
+        print(f"total available human labelled target tags = {total_target_tags}")
         print(f"undefined {undefined}")
 
         return
@@ -201,7 +202,9 @@ def dataset_from_df(
     # filter out the rest of the clips because these are made up from
     # - partial overlap: audio containing only part of the target call. If we use an overlap of 0.5 at inference, and the window is longer than the max target length, then we should always have at least one clip that contains the whole target call during inference.
     # - audio from after the first target tag: this might contain unlabeled target calls.
-    df = df.drop(df.loc[df.target_presence == False][df.target_absence == False].index)
+    df = df.drop(
+        df.loc[df.target_presence == False].loc[df.target_absence == False].index
+    )
 
     # Set multi index for passing into AudioFileDataset
     df.set_index(["file", "start_time", "end_time"], inplace=True)
@@ -226,9 +229,9 @@ def dataset_from_df(
         train_df = df[df["is_valid"] == False]
         valid_df = df[df["is_valid"] == True]
 
-        return train_df, valid_df
+        return train_df, valid_df, train_locations, valid_locations
 
-    train_df, valid_df = make_train_valid_split(df)
+    train_df, valid_df, train_locations, valid_locations = make_train_valid_split(df)
 
     if one_class:
         train_ds = opso.AudioFileDataset(
@@ -251,14 +254,14 @@ def dataset_from_df(
             bypass_augmentations=True,  # remove preprocessing for validation set
         )
 
-    sample_idxs = random.sample(range(len(train_df)), 5)
+    display_sample_idxs = random.sample(range(len(train_df)), 5)
 
-    sample_tensors = [train_ds[i].data for i in sample_idxs]
-    sample_labels = [train_ds[i].labels.target_presence for i in sample_idxs]
+    sample_tensors = [train_ds[i].data for i in display_sample_idxs]
+    sample_labels = [train_ds[i].labels.target_presence for i in display_sample_idxs]
 
-    _ = show_tensor_grid(sample_tensors, 2, labels=sample_labels)
+    _unused_fig = show_tensor_grid(sample_tensors, 2, labels=sample_labels)
 
-    return train_ds, valid_ds
+    return train_ds, valid_ds, train_locations, valid_locations
 
 
 if __name__ == "__main__":
