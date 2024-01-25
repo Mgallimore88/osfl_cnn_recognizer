@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import geopandas as gpd
 import pandas as pd
 from IPython.display import display
+import random
 
 
 ### Pandas ###
@@ -89,6 +90,19 @@ def plot_locations(
     # Plot base map
     fig, ax = plt.subplots(figsize=(15, 5))
     canada.plot(color="lightgrey", ax=ax)
+
+    # Take a sample of recordings from a dataframe
+
+
+def take_sample(df, sample_fraction=0.1):
+    unique_recordings = list(set(df.recording_id))
+    sample_size = round(sample_fraction * len(unique_recordings))
+    sample_recordings = random.sample(unique_recordings, sample_size)
+    df_sample = df[df.recording_id.isin(sample_recordings)]
+    print(
+        f"sampled {len(sample_recordings)} recordings from the original {len(unique_recordings)} "
+    )
+    return df_sample
 
     # Plot points with legend
     for i, feature_label in enumerate(all_features):
