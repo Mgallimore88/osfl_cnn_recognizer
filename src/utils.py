@@ -6,10 +6,14 @@ import random
 
 
 ### Pandas ###
-def display_all(df, max_rows=None, max_columns=None):
+def display_all(df: pd.DataFrame, max_rows: int = 0, max_columns: int = 0) -> None:
     """
     Display all columns and rows of a dataframe without truncating.
     """
+    if max_rows == 0:
+        max_rows = len(df)
+    if max_columns == 0:
+        max_columns = len(df.columns)
     with pd.option_context(
         "display.max_rows", max_rows, "display.max_columns", max_columns
     ):
