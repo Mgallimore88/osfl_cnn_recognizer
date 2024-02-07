@@ -95,19 +95,6 @@ def plot_locations(
     fig, ax = plt.subplots(figsize=(15, 5))
     canada.plot(color="lightgrey", ax=ax)
 
-    # Take a sample of recordings from a dataframe
-
-
-def take_sample(df, sample_fraction=0.1):
-    unique_recordings = list(set(df.recording_id))
-    sample_size = round(sample_fraction * len(unique_recordings))
-    sample_recordings = random.sample(unique_recordings, sample_size)
-    df_sample = df[df.recording_id.isin(sample_recordings)]
-    print(
-        f"sampled {len(sample_recordings)} recordings from the original {len(unique_recordings)} "
-    )
-    return df_sample
-
     # Plot points with legend
     for i, feature_label in enumerate(all_features):
         color = (
@@ -131,3 +118,42 @@ def take_sample(df, sample_fraction=0.1):
     # Example usage
     # plot_locations(df, feature='species_code', num_features=10, forced_features=['OSFL'])
     # plot_locations(df_lite, feature='project', num_features=10, forced_features=['CWS-Ontario Birds of James Bay Lowlands 2021'])
+
+
+# Take a sample of recordings from a dataframe
+
+
+def take_sample(df, sample_fraction=0.1, seed=None):
+    random.seed(seed)
+    unique_recordings = list(set(df.recording_id))
+    sample_size = round(sample_fraction * len(unique_recordings))
+    sample_recordings = random.sample(unique_recordings, sample_size)
+    df_sample = df[df.recording_id.isin(sample_recordings)]
+    print(
+        f"sampled {len(sample_recordings)} recordings from the original {len(unique_recordings)} "
+    )
+    return df_sample
+
+
+def spec_to_audio(spec_filename, audio_path):
+    """
+    Utility function to get from a precomputed spectrogram back to the same segment of the audio file.
+
+    The filename of the spectrogram is used.
+    Filename format:
+    recording-<recording_id>.<file_extension>-<offset>-<end>-.pkl
+    Example filename:
+    recording-4429.mp3-12.0-15.0-.pkl
+
+    Args:
+        spec_filename (str): filename of the spectrogram
+        audio_path (str): path to the audio files
+    Returns:
+        path (str): path to the source audio file
+        offset (float): offset in seconds from beginning of the recording
+        duration (str): duration of the clip in seconds.
+    """
+    _, rec_file, offset, end, _ = spec_filename.split("-")
+    duration = float(end) - float(offset)
+    path = Path(f"{audio_path}/recording-{rec_file}")
+    return path, float(offset), duration
