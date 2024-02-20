@@ -2,7 +2,8 @@
 references/birdsoftheworld/
 
 # oss tutorials
-notebooks/exploratory_nbs/opensoundscape-tutorials/
+notebooks/exploratory_nbs/opensoundscape-tutorials/*
+!notebooks/exploratory_nbs/opensoundscape-tutorials/*ipynb
 
 # credentials
 secrets.yml
