@@ -37,6 +37,7 @@ def dataset_from_df(
     target_species="OSFL",
     download_n: int = 0,
     one_class: bool = False,
+    seed: int | None = None,
 ) -> tuple[opso.AudioFileDataset, opso.AudioFileDataset, pd.Series, pd.Series]:
     """
     Returns a labelled dataset from a cleaned dataframe.
@@ -44,19 +45,21 @@ def dataset_from_df(
     Finally the dataset is split into training and validation sets.
     """
 
-    # load data including species timestamps for label calculation
-    df_full = pd.read_pickle(
-        BASE_PATH
-        / "data"
-        / "interim"
-        / "train_and_valid_set"
-        / "train_and_valid_set.pkl"
-    )
+    # # load data including species timestamps for label calculation
+    # df_full = pd.read_pickle(
+    #     BASE_PATH
+    #     / "data"
+    #     / "interim"
+    #     / "train_and_valid_set"
+    #     / "train_and_valid_set.pkl"
+    # )
 
     recording_path = BASE_PATH / "data" / "raw" / "recordings" / target_species
 
-    # keep columns specified in utils.py
+    # filter for target species
     target_df = df.loc[df.species_code == target_species]
+
+    # keep columns specified in utils.py
     df = df[keep_cols]
     target_df = target_df[keep_cols]
 
@@ -213,10 +216,13 @@ def dataset_from_df(
     # Set multi index for passing into AudioFileDataset
     df.set_index(["file", "start_time", "end_time"], inplace=True)
 
-    report_counts(df, "after filtering undefined clips")
+    print(
+        f"after filtering, {len(df.loc[(df.target_presence == False)].loc[(df.target_absence == False)])} undefined clips remain"
+    )
 
     # Split the dataset into training and validation sets
-    def make_train_valid_split(df):
+    def make_train_valid_split(df, seed=None):
+        np.random.seed(seed)
         # Get unique location_ids and shuffle them
         unique_locations = df["location_id"].unique()
         np.random.shuffle(unique_locations)
@@ -235,7 +241,9 @@ def dataset_from_df(
 
         return train_df, valid_df, train_locations, valid_locations
 
-    train_df, valid_df, train_locations, valid_locations = make_train_valid_split(df)
+    train_df, valid_df, train_locations, valid_locations = make_train_valid_split(
+        df, seed
+    )
 
     if one_class:
         train_ds = opso.AudioFileDataset(
