@@ -3,6 +3,7 @@ import geopandas as gpd
 import pandas as pd
 from IPython.display import display
 import random
+import opensoundscape as opso
 
 
 ### Pandas ###
@@ -18,6 +19,20 @@ def display_all(df: pd.DataFrame, max_rows: int = 0, max_columns: int = 0) -> No
         "display.max_rows", max_rows, "display.max_columns", max_columns
     ):
         display(df)
+
+
+def show_sample_from_df(df: pd.DataFrame, idx: int = 0):
+    """
+    utility function to play audio and plot spectrogram for an item in a dataframe.
+    Index must be a mulit index of path, offset, end time.
+    """
+    path, offset, end_time = df.index[idx]
+    duration = end_time - offset
+    audio = opso.Audio.from_file(path, offset=offset, duration=duration)
+    spec = opso.Spectrogram.from_audio(audio)
+    print(path, offset, end_time)
+    audio.show_widget()
+    spec.plot()
 
 
 ### project dataframe ###

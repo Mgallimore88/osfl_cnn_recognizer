@@ -46,7 +46,11 @@ def dataset_from_df(
 
     # load data including species timestamps for label calculation
     df_full = pd.read_pickle(
-        BASE_PATH / "data" / "processed" / "train_set" / "train_set.pkl"
+        BASE_PATH
+        / "data"
+        / "interim"
+        / "train_and_valid_set"
+        / "train_and_valid_set.pkl"
     )
 
     recording_path = BASE_PATH / "data" / "raw" / "recordings" / target_species
@@ -245,11 +249,11 @@ def dataset_from_df(
         )
     else:
         train_ds = opso.AudioFileDataset(
-            train_df[["target_presence", "target_absence"]],
+            train_df[["target_absence", "target_presence"]],
             pre,
         )
         valid_ds = opso.AudioFileDataset(
-            valid_df[["target_presence", "target_absence"]],
+            valid_df[["target_absence", "target_presence"]],
             pre,
             bypass_augmentations=True,  # remove preprocessing for validation set
         )
