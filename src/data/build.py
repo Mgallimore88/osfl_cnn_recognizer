@@ -257,11 +257,17 @@ def dataset_from_df(
         )
     else:
         train_ds = opso.AudioFileDataset(
-            train_df[["target_absence", "target_presence"]],
+            # train_df[["target_absence", "target_presence"]],
+            train_df[
+                ["target_presence", "target_absence"]
+            ],  # Troubleshoot swap index order
             pre,
         )
         valid_ds = opso.AudioFileDataset(
-            valid_df[["target_absence", "target_presence"]],
+            # valid_df[["target_absence", "target_presence"]],
+            valid_df[
+                ["target_presence", "target_absence"]
+            ],  # Troubleshoot swap index order
             pre,
             bypass_augmentations=True,  # remove preprocessing for validation set
         )
