@@ -4,6 +4,7 @@ import pandas as pd
 from IPython.display import display
 import random
 import opensoundscape as opso
+import torch
 
 
 ### Pandas ###
@@ -24,7 +25,7 @@ def display_all(df: pd.DataFrame, max_rows: int = 0, max_columns: int = 0) -> No
 def show_sample_from_df(df: pd.DataFrame, idx: int = 0):
     """
     utility function to play audio and plot spectrogram for an item in a dataframe.
-    Index must be a mulit index of path, offset, end time.
+    Index must be a multi index of path, offset, end time.
     """
     path, offset, end_time = df.index[idx]
     duration = end_time - offset
@@ -66,6 +67,51 @@ def print_stats(df):
     simple stats
     """
     return df.describe()
+
+
+def plot_metrics_across_thresholds(df):
+    from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score
+
+    """
+    Plots metrics across a range of thresholds.
+
+    args:
+
+    df: a dataframe with the following columns:
+    label: the target for each example
+    present_pred: model's predicted probability of the positive class
+    """
+
+    def generate_predictions(df, threshold):
+        df["prediction"] = df.apply(
+            lambda x: 1 if x["present_pred"] > threshold else 0, axis=1
+        )
+        return df
+
+    plot_data = []
+    for threshold in torch.linspace(0, 1, 50):
+        df = generate_predictions(df, threshold)
+        plot_data.append(
+            [
+                threshold,
+                accuracy_score(df.label, df.prediction),
+                precision_score(df.label, df.prediction),
+                recall_score(df.label, df.prediction),
+                f1_score(df.label, df.prediction),
+            ]
+        )
+
+    thresholds, accuracies, precisions, recalls, f1s = zip(*plot_data)
+    plt.plot(thresholds, accuracies)
+    plt.plot(thresholds, precisions)
+    plt.plot(thresholds, recalls)
+    plt.plot(thresholds, f1s)
+    ax, fig = plt.gca(), plt.gcf()
+    ax.set_xlabel("Threshold")
+    ax.set_ylabel("Metric")
+    ax.legend(["Accuracy", "Precision", "Recall", "F1 Score"])
+    plt.show()
+    return plt
 
 
 ### Location and GeoPandas ###
