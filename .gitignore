@@ -7,9 +7,7 @@ models/*
 
 # oss tutorials
 notebooks/exploratory_nbs/opensoundscape-tutorials/*
-notebooks/exploratory_nbs/osfl_model*
-notebooks/exploratory_nbs/best*
-notebooks/exploratory_nbs/best.model
+notebooks/exploratory_nbs/*.model
 
 
 !notebooks/exploratory_nbs/opensoundscape-tutorials/*ipynb
