@@ -5,6 +5,7 @@ from IPython.display import display
 import random
 import opensoundscape as opso
 import torch
+import hashlib
 
 
 ### Pandas ###
@@ -69,7 +70,7 @@ def print_stats(df):
     return df.describe()
 
 
-def plot_metrics_across_thresholds(df):
+def plot_metrics_across_thresholds(df, title="Metrics across thresholds"):
     from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score
 
     """
@@ -109,9 +110,11 @@ def plot_metrics_across_thresholds(df):
     ax, fig = plt.gca(), plt.gcf()
     ax.set_xlabel("Threshold")
     ax.set_ylabel("Metric")
-    ax.legend(["Accuracy", "Precision", "Recall", "F1 Score"])
+    legend = ["Accuracy", "Precision", "Recall", "F1 Score"]
+    ax.legend(legend)
+    ax.set_title(title)
     plt.show()
-    return plt
+    return plot_data, legend
 
 
 ### Location and GeoPandas ###
@@ -182,9 +185,10 @@ def plot_locations(
 
 
 # Take a sample of recordings from a dataframe
-
-
 def take_sample(df, sample_fraction=0.1, seed=None):
+    """
+    Take a random sample of recording locations from a dataframe.
+    """
     random.seed(seed)
     unique_recordings = list(set(df.recording_id))
     sample_size = round(sample_fraction * len(unique_recordings))
@@ -194,6 +198,21 @@ def take_sample(df, sample_fraction=0.1, seed=None):
         f"sampled {len(sample_recordings)} recordings from the original {len(unique_recordings)} "
     )
     return df_sample
+
+
+# Hashing
+def get_hash_from_df(df):
+    """
+    Convert the DataFrame to a hashable string.
+    Take a hash of each row, then concatenate the hashes, and finally hash the concatenated hash.
+    """
+    df_string_to_hash = "".join(pd.util.hash_pandas_object(df, index=False).astype(str))
+
+    # Use hashlib to create a hash of the entire DataFrame
+    df_hash_value = hashlib.sha256(df_string_to_hash.encode()).hexdigest()
+
+    print(df_hash_value)
+    return df_hash_value
 
 
 def spec_to_audio(spec_filename, audio_path):
