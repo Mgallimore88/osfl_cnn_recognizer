@@ -23,6 +23,21 @@ def display_all(df: pd.DataFrame, max_rows: int = 0, max_columns: int = 0) -> No
         display(df)
 
 
+def clean_confidence_cats(df):
+    # Re-label the mis-labelled clips
+    df.loc[df["confidence_cat"] == 5, "target_presence"] = 1.0
+    df.loc[df["confidence_cat"] == 6, "target_presence"] = 0.0
+
+    # drop the clips with confidence 1 or 2 since these were hard to label and wouldn't constitute clear examples of the target class.
+    df = df[df["confidence_cat"] != 1]
+    df = df[df["confidence_cat"] != 2]
+
+    # Drop the redundant columns
+    df = df[["target_presence"]]
+
+    return df
+
+
 def show_sample_from_df(df: pd.DataFrame, idx: int = 0):
     """
     utility function to play audio and plot spectrogram for an item in a dataframe.

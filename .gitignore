@@ -8,6 +8,9 @@ models/*
 # oss tutorials
 notebooks/exploratory_nbs/opensoundscape-tutorials/*
 notebooks/exploratory_nbs/*.model
+notebooks/model_training_checkpoints/*
+model_training_checkpoints/*
+
 
 
 !notebooks/exploratory_nbs/opensoundscape-tutorials/*ipynb
