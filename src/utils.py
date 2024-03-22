@@ -23,6 +23,17 @@ def display_all(df: pd.DataFrame, max_rows: int = 0, max_columns: int = 0) -> No
         display(df)
 
 
+def calculate_file_durations(df):
+    # Takes multi indexed df with file paths as first index. Returns file durations.
+    audio_files = df.index.get_level_values("file").unique().values
+    opso.Audio.from_file(audio_files[0]).duration
+    durations = []
+    for file in audio_files:
+        audio = opso.Audio.from_file(file)
+        durations.append(audio.duration)
+    return durations
+
+
 def clean_confidence_cats(df):
     # Re-label the mis-labelled clips
     df.loc[df["confidence_cat"] == 5, "target_presence"] = 1.0

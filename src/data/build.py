@@ -14,9 +14,9 @@ from utils import *
 import download_recordings
 
 
-# column name : aggregation method
-# For choosing column contents wheh the dataframe is grouped by recording id
+# Choose column contents when the dataframe is grouped by recording id
 # instead of clip id.
+# column name : aggregation method
 recordings_metadata_dict = {
     "recording_url": "first",
     "task_method": "first",
@@ -32,27 +32,72 @@ recordings_metadata_dict = {
 }
 
 
-def dataset_from_df(
+# Show clips per task method
+def report_counts(df: pd.DataFrame, header: str = ""):
+    total_target_tags = len(
+        df.loc[df.task_method.isin(["1SPT", "1SPM", "no_restrictions"])]
+    )
+    task_methods = df.task_method.value_counts(dropna=False)
+    present_absent_counts = df.groupby("task_method", dropna=False).agg(
+        {"target_present": "sum", "target_absent": "sum"}
+    )
+    present_clips = len(df.loc[df.target_present == True])
+    absent_clips = len(df.loc[df.target_absent == True])
+
+    print("\n--------------------------------------------------")
+    print(header)
+    print(f"recordings per task method = \n {task_methods}")
+    print(f"total recordings = {len(df)}")
+    print("\nTags generated from each tagging method:")
+    print(present_absent_counts)
+    print(f"total present clips =  {present_clips}")
+    print(f"total absent clips =  {absent_clips}")
+    print(f"total available human labelled tags = {total_target_tags}")
+    return
+
+
+# Split the dataset into training and validation sets
+# This is done by location id, to ensure that the model generalizes to new areas.
+# TODO - also split by date in case some ARUs are within earshot of each other.
+def make_train_valid_split(df, seed=None):
+    np.random.seed(seed)
+    # Get unique location_ids and shuffle them
+    unique_locations = df["location_id"].unique()
+    np.random.shuffle(unique_locations)
+
+    # Split the unique location_ids (80% train, 20% valid)
+    split_index = int(len(unique_locations) * 0.80)
+    train_locations = unique_locations[:split_index]
+    valid_locations = unique_locations[split_index:]
+
+    # Mark the rows in original DataFrame
+    df["is_valid"] = df["location_id"].isin(valid_locations)
+
+    # Split the DataFrame into two based on 'is_valid'
+    train_df = df[df["is_valid"] == False]
+    valid_df = df[df["is_valid"] == True]
+
+    return train_df, valid_df
+
+
+def new_labelled_df(
     df: pd.DataFrame,
     target_species="OSFL",
     download_n: int = 0,
-    one_class: bool = False,
+    sample_duration: float = 3.0,
+    overlap_fraction: float = 0.5,
+    existing_test_set: pd.DataFrame | None = None,
     seed: int | None = None,
-) -> tuple[opso.AudioFileDataset, opso.AudioFileDataset, pd.Series, pd.Series]:
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Returns a labelled dataset from a cleaned dataframe.
-    The audio starts out as long recordings, which are downloaded from the recording_url field in the dataframe (not yet publicly available). Segements containing target or non-target audio are identified by the tag window onset and duration times along with the tagging method used for that recording. The audio is then split into clips, and the clips are labelled as containing target or non-target audio. The clips are then passed into an AudioFileDataset, which returns a spectrogram tensor and a label tensor for each clip.
+    Calculates absent and present tags for one species from a cleaned human labelled dataframe.
+
+    The audio starts out as long recordings, which are downloaded from the recording_url field (not yet publicly available) in the input dataframe.
+
+    Segements containing target or non-target audio are identified by the tag window onset and duration times along with the tagging method used for that recording. The audio is then split into clips, and the clips are labelled as present or absent.
+
     Finally the dataset is split into training and validation sets.
     """
-
-    # # load data including species timestamps for label calculation
-    # df_full = pd.read_pickle(
-    #     BASE_PATH
-    #     / "data"
-    #     / "interim"
-    #     / "train_and_valid_set"
-    #     / "train_and_valid_set.pkl"
-    # )
 
     recording_path = BASE_PATH / "data" / "raw" / "recordings" / target_species
 
@@ -113,7 +158,9 @@ def dataset_from_df(
 
     # create a spectrogram preprocessor
     # force outputs to be same size
-    pre = opso.SpectrogramPreprocessor(sample_duration=3.0, width=224 * 3, height=224)
+    pre = opso.SpectrogramPreprocessor(
+        sample_duration=sample_duration, width=224, height=224
+    )
 
     # re-index the dataframe with 'relative_path' as the index ready for AudioFileDataset and AudioSplittingDataset
     downloaded_paths_df = pd.DataFrame(df_downloaded_recordings.index).set_index(
@@ -123,7 +170,7 @@ def dataset_from_df(
     splitting_dataset = opso.AudioSplittingDataset(
         downloaded_paths_df,
         pre,
-        overlap_fraction=0.5,
+        overlap_fraction=overlap_fraction,
         final_clip="full",
     )
 
@@ -136,16 +183,16 @@ def dataset_from_df(
     # filter for recordings tagged using 1SPT or 1SPM methods
     keep_recs = df.loc[
         (
-            df.task_method.isna()  # no restrictions on tagging
-            | (df.task_method == "1SPT")
-            | (df.task_method == "1SPM")
+            (df.task_method == "no_restrictions")  # no restrictions on tagging
+            | (df.task_method == "1SPT")  # 1 sample per task
+            | (df.task_method == "1SPM")  # 1 sample per minute
         )
     ].file
     df = df.loc[df.file.isin(keep_recs)]
 
     ### Create labels for each clip ###
 
-    # calculate target presence
+    # calculate target present clips
     def clip_contains_target_tag(row: pd.Series):
         """
         Adds a row to dataframe indicating presence of target.
@@ -160,7 +207,7 @@ def dataset_from_df(
                 return float(1)
         return float(0)
 
-    df["target_presence"] = df.apply(clip_contains_target_tag, axis=1)
+    df["target_present"] = df.apply(clip_contains_target_tag, axis=1)
 
     # calculate target absence
     def clip_is_before_first_tag(row):
@@ -175,112 +222,34 @@ def dataset_from_df(
         else:
             return float(0)
 
-    df["target_absence"] = df.apply(clip_is_before_first_tag, axis=1)
-
-    def report_counts(df: pd.DataFrame, info: str = ""):
-        total_target_tags = len(
-            target_df.loc[target_df.task_method.isin(["1SPT", "1SPM", np.nan])]
-        )
-        task_methods = df.task_method.value_counts(dropna=False)
-        presence_absence_counts = df.groupby("task_method", dropna=False).agg(
-            {"target_presence": "sum", "target_absence": "sum"}
-        )
-        targets = len(df.loc[df.target_presence == True])
-        absences = len(df.loc[df.target_absence == True])
-        undefined = len(
-            df.loc[(df.target_presence == False)].loc[(df.target_absence == False)]
-        )
-
-        print("\n--------------------------------------------------")
-        print(info)
-        print(f"recordings per task method = \n {task_methods}")
-        print(f"total recordings = {len(df)}")
-        print("\nTags generated from each tagging method:")
-        print(presence_absence_counts)
-        print(f"total target clips =  {targets}")
-        print(f"total absence clips =  {absences}")
-        print(f"total available human labelled target tags = {total_target_tags}")
-        print(f"undefined {undefined}")
-
-        return
-
-    report_counts(df, "before filtering undefined clips")
+    df["target_absent"] = df.apply(clip_is_before_first_tag, axis=1)
 
     # filter out the rest of the clips because these are made up from
-    # - partial overlap: audio containing only part of the target call. If we use an overlap of 0.5 at inference, and the window is longer than the max target length, then we should always have at least one clip that contains the whole target call during inference.
-    # - audio from after the first target tag: this might contain unlabeled target calls.
+    # *partial overlap*: audio containing only part of the target call. If we use an overlap of 0.5 at inference, and the window is longer than the max target length, then we should always have at least one clip that contains the whole target call during inference.
+    # - *audio from after the first target tag*: this might contain unlabeled target calls.
     df = df.drop(
-        df.loc[df.target_presence == False].loc[df.target_absence == False].index
+        df.loc[df.target_present == False].loc[df.target_absent == False].index
     )
 
-    # Set multi index for passing into AudioFileDataset
+    # Set multi index for use with opensoundscape
     df.set_index(["file", "start_time", "end_time"], inplace=True)
 
-    print(
-        f"after filtering, {len(df.loc[(df.target_presence == False)].loc[(df.target_absence == False)])} undefined clips remain"
-    )
+    train_df, valid_df = make_train_valid_split(df, seed)
 
-    # Split the dataset into training and validation sets
-    def make_train_valid_split(df, seed=None):
-        np.random.seed(seed)
-        # Get unique location_ids and shuffle them
-        unique_locations = df["location_id"].unique()
-        np.random.shuffle(unique_locations)
+    # Drop the locations found in the premade test set from the training set
+    if existing_test_set is not None:
+        test_locations = existing_test_set.location_id.unique()
+        train_locations = train_df.location_id.unique()
+        # find intersect
+        intersect = list(set(test_locations) & set(train_locations))
+        train_df = train_df[~train_df.location_id.isin(intersect)]
+        print(f"dropped {len(intersect)} locations from training set")
 
-        # Split the unique location_ids (80% train, 20% valid)
-        split_index = int(len(unique_locations) * 0.80)
-        train_locations = unique_locations[:split_index]
-        valid_locations = unique_locations[split_index:]
+    report_counts(train_df, "train set")
+    report_counts(valid_df, "valid set")
 
-        # Mark the rows in original DataFrame
-        df["is_valid"] = df["location_id"].isin(valid_locations)
-
-        # Split the DataFrame into two based on 'is_valid'
-        train_df = df[df["is_valid"] == False]
-        valid_df = df[df["is_valid"] == True]
-
-        return train_df, valid_df, train_locations, valid_locations
-
-    train_df, valid_df, train_locations, valid_locations = make_train_valid_split(
-        df, seed
-    )
-
-    if one_class:
-        train_ds = opso.AudioFileDataset(
-            train_df[["target_presence"]],
-            pre,
-        )
-        valid_ds = opso.AudioFileDataset(
-            valid_df[["target_presence"]],
-            pre,
-            bypass_augmentations=True,  # remove preprocessing for validation set
-        )
-    else:
-        train_ds = opso.AudioFileDataset(
-            # train_df[["target_absence", "target_presence"]],
-            train_df[
-                ["target_absence", "target_presence"]
-            ],  # Troubleshoot swap index order
-            pre,
-        )
-        valid_ds = opso.AudioFileDataset(
-            # valid_df[["target_absence", "target_presence"]],
-            valid_df[
-                ["target_absence", "target_presence"]
-            ],  # Troubleshoot swap index order
-            pre,
-            bypass_augmentations=True,  # remove preprocessing for validation set
-        )
-
-    display_sample_idxs = random.sample(range(len(train_df)), 5)
-
-    sample_tensors = [train_ds[i].data for i in display_sample_idxs]
-    sample_labels = [train_ds[i].labels.target_presence for i in display_sample_idxs]
-
-    _unused_fig = show_tensor_grid(sample_tensors, 2, labels=sample_labels)
-
-    return train_ds, valid_ds, train_locations, valid_locations
+    return train_df, valid_df
 
 
 if __name__ == "__main__":
-    dataset_from_df(df, target_species="OSFL", download_n=0)
+    new_labelled_df(df, target_species="OSFL", download_n=0)
