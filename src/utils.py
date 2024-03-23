@@ -6,6 +6,7 @@ import random
 import opensoundscape as opso
 import torch
 import hashlib
+from tqdm import tqdm
 
 
 ### Pandas ###
@@ -21,6 +22,31 @@ def display_all(df: pd.DataFrame, max_rows: int = 0, max_columns: int = 0) -> No
         "display.max_rows", max_rows, "display.max_columns", max_columns
     ):
         display(df)
+
+
+### project dataframe ###
+keep_cols = [
+    "organization",
+    "project",
+    "project_id",
+    "location_id",
+    "recording_id",
+    "recording_date_time",
+    "species_code",
+    "species_common_name",
+    "detection_time",
+    "task_duration",
+    "tag_duration",
+    "tag_id",
+    "clip_url",
+    "recording_url",
+    "task_method",
+    "latitude",
+    "longitude",
+    "file_type",
+    "media_url",
+    "individual_order",
+]
 
 
 def calculate_file_durations(df):
@@ -49,43 +75,23 @@ def clean_confidence_cats(df):
     return df
 
 
-def show_sample_from_df(df: pd.DataFrame, idx: int = 0):
+def show_sample_from_df(df: pd.DataFrame, label: str | None = "present"):
     """
-    utility function to play audio and plot spectrogram for an item in a dataframe.
+    Play audio and plot spectrogram for an item in a dataframe.
     Index must be a multi index of path, offset, end time.
     """
-    path, offset, end_time = df.index[idx]
+    if label == "present":
+        sample = df.loc[df.target_presence == 1].sample()
+    elif label == "absent":
+        sample = df.loc[df.target_presence == 0].sample()
+    else:
+        sample = df.sample()
+    path, offset, end_time = sample.index[0]
     duration = end_time - offset
     audio = opso.Audio.from_file(path, offset=offset, duration=duration)
     spec = opso.Spectrogram.from_audio(audio)
-    print(path, offset, end_time)
     audio.show_widget()
     spec.plot()
-
-
-### project dataframe ###
-keep_cols = [
-    "organization",
-    "project",
-    "project_id",
-    "location_id",
-    "recording_id",
-    "recording_date_time",
-    "species_code",
-    "species_common_name",
-    "detection_time",
-    "task_duration",
-    "tag_duration",
-    "tag_id",
-    "clip_url",
-    "recording_url",
-    "task_method",
-    "latitude",
-    "longitude",
-    "file_type",
-    "media_url",
-    "individual_order",
-]
 
 
 ### Graphing ###
@@ -96,9 +102,9 @@ def print_stats(df):
     return df.describe()
 
 
-def plot_metrics_across_thresholds(df, title="Metrics across thresholds"):
-    from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score
-
+def plot_metrics_across_thresholds(
+    df, preds_column: str = "present_pred", title="Metrics across thresholds"
+):
     """
     Plots metrics across a range of thresholds.
 
@@ -106,12 +112,13 @@ def plot_metrics_across_thresholds(df, title="Metrics across thresholds"):
 
     df: a dataframe with the following columns:
     label: the target for each example
-    present_pred: model's predicted probability of the positive class
+    preds: name of the column with the predictions
     """
+    from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score
 
     def generate_predictions(df, threshold):
         df["prediction"] = df.apply(
-            lambda x: 1 if x["present_pred"] > threshold else 0, axis=1
+            lambda x: 1 if x[preds_column] > threshold else 0, axis=1
         )
         return df
 
@@ -263,3 +270,11 @@ def spec_to_audio(spec_filename, audio_path):
     duration = float(end) - float(offset)
     path = Path(f"{audio_path}/recording-{rec_file}")
     return path, float(offset), duration
+
+
+### Error checking ###
+def get_recording_durations(df):
+    durations = []
+    for idx in tqdm(df.index, desc="getting_audio_file_durations"):
+        durations.append(opso.Audio.from_file(idx[0]).duration)
+    return durations
