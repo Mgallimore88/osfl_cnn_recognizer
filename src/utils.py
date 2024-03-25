@@ -68,10 +68,6 @@ def clean_confidence_cats(df):
     # drop the clips with confidence 1 or 2 since these were hard to label and wouldn't constitute clear examples of the target class.
     df = df[df["confidence_cat"] != 1]
     df = df[df["confidence_cat"] != 2]
-
-    # Drop the redundant columns
-    df = df[["target_presence"]]
-
     return df
 
 
