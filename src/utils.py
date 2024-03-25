@@ -119,7 +119,7 @@ def plot_metrics_across_thresholds(
         return df
 
     plot_data = []
-    for threshold in torch.linspace(0, 1, 50):
+    for threshold in torch.linspace(0, 1, 500):
         df = generate_predictions(df, threshold)
         plot_data.append(
             [
