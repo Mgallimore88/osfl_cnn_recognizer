@@ -7,6 +7,7 @@ import opensoundscape as opso
 import torch
 import hashlib
 from tqdm import tqdm
+from sklearn.model_selection import train_test_split
 
 
 ### Pandas ###
@@ -227,6 +228,20 @@ def take_sample(df, sample_fraction=0.1, seed=None):
         f"sampled {len(sample_recordings)} recordings from the original {len(unique_recordings)} "
     )
     return df_sample
+
+
+# train/test split:
+def train_test_split_by_location(df: pd.DataFrame, test_size=0.2, random_state=42):
+    """
+    Split the dataframe into train and test sets by location.
+    """
+    locations = df.location_id.unique()
+    train_locations, test_locations = train_test_split(
+        locations, test_size=test_size, random_state=random_state
+    )
+    df_test = df.loc[df.location_id.isin(test_locations)]
+    df_train = df.loc[df.location_id.isin(train_locations)]
+    return df_train, df_test
 
 
 # Hashing

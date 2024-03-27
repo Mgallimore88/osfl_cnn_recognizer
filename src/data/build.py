@@ -97,6 +97,29 @@ def new_labelled_df(
     Segements containing target or non-target audio are identified by the tag window onset and duration times along with the tagging method used for that recording. The audio is then split into clips, and the clips are labelled as present or absent.
 
     Finally the dataset is split into training and validation sets.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Cleaned human labelled dataframe
+    target_species : str
+        Species code for the target species
+    download_n : int
+        Number of recordings to download. Can be 0
+    sample_duration : float
+        window length in seconds
+    overlap_fraction : float
+        fraction of overlap between windows
+    existing_test_set : pd.DataFrame
+        Dataframe containing the test set. If provided, the locations in the test set will be removed from the training set.
+    seed : int
+        Random seed for reproducibility
+
+    Returns
+    -------
+    tuple[pd.DataFrame, pd.DataFrame] : training and validation dataframes
+
+
     """
 
     recording_path = BASE_PATH / "data" / "raw" / "recordings" / target_species
