@@ -72,18 +72,34 @@ def clean_confidence_cats(df):
     return df
 
 
-def show_sample_from_df(df: pd.DataFrame, label: str | None = "present"):
+def show_sample_from_df(df: pd.DataFrame, label: str = "present"):
     """
     Play audio and plot spectrogram for an item in a dataframe.
     Index must be a multi index of path, offset, end time.
+    args: df: dataframe with multi index
+    label: "present" or "absent"
     """
     if label == "present":
         sample = df.loc[df.target_presence == 1].sample()
     elif label == "absent":
         sample = df.loc[df.target_presence == 0].sample()
-    else:
-        sample = df.sample()
+
     path, offset, end_time = sample.index[0]
+    duration = end_time - offset
+    audio = opso.Audio.from_file(path, offset=offset, duration=duration)
+    spec = opso.Spectrogram.from_audio(audio)
+    audio.show_widget()
+    spec.plot()
+
+
+def show_index_from_df(df, idx):
+    """
+    Play audio and plot spectrogram for an item in a dataframe.
+    Index must be a multi index of path, offset, end time.
+    args: df: dataframe with multi index
+    idx: index of the item to show
+    """
+    path, offset, end_time = df.index[idx]
     duration = end_time - offset
     audio = opso.Audio.from_file(path, offset=offset, duration=duration)
     spec = opso.Spectrogram.from_audio(audio)
@@ -281,6 +297,24 @@ def spec_to_audio(spec_filename, audio_path):
     duration = float(end) - float(offset)
     path = Path(f"{audio_path}/recording-{rec_file}")
     return path, float(offset), duration
+
+
+def get_binary_targets_scores(
+    target_df: pd.DataFrame, model_predictions_df: pd.DataFrame, threshold=0.5
+):
+    """
+    Calculate the binary predictions needed for confusion matrix and other metrics.
+    target_df: DataFrame with labels in the target_presence column
+    model_predictions_df: DataFrame with model predictions in target_presence column
+    Returns:
+    binary_preds: binary predictions as 0 or 1
+    targets: true labels as 0 or 1
+    scores: model scores as continuous variables
+    """
+    targets = target_df.target_presence.values
+    scores = model_predictions_df.target_presence.values
+    binary_preds = (scores > threshold).astype(float)
+    return binary_preds, targets, scores
 
 
 ### Error checking ###
