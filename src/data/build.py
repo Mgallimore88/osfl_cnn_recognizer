@@ -105,7 +105,9 @@ def new_labelled_df(
     target_species : str
         Species code for the target species
     download_n : int
-        Number of recordings to download. Can be 0
+        Number of recordings containing at least one target vocalization to download. Can be 0
+    out_of_habitat_n : int
+        Number of recordings from outside of the target habitat to download. Can be 0
     sample_duration : float
         window length in seconds
     overlap_fraction : float
@@ -126,6 +128,7 @@ def new_labelled_df(
 
     # filter for target species
     target_df = df.loc[df.species_code == target_species]
+    target_locations = target_df.location_id.unique()
 
     # keep columns specified in utils.py
     df = df[keep_cols]
@@ -272,6 +275,95 @@ def new_labelled_df(
     report_counts(valid_df, "valid set")
 
     return train_df, valid_df
+
+
+# Separately download samples from outside of the target habitat. These  will all be negative examples.
+def other_habitat_df(df, target_species="OSFL", download_n=0, seed=None):
+    """
+    Download recordings from outside of the target habitat to use as negative examples.
+    This is simply a random sample across all locations where the target species was not detected.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Cleaned human labelled dataframe
+    target_species : str
+        Species code for the target species to filter out of this set of recordings
+    out_of_habitat_n : int
+        Number of recordings from outside of the target habitat to download. Can be 0
+    seed : int
+        Random seed for reproducibility
+
+    Returns
+    -------
+    pd.DataFrame : dataframe containing recordings from outside of the target habitat
+    """
+    recording_path = (
+        BASE_PATH / "data" / "raw" / "recordings" / f"{target_species}_other_habitats"
+    )
+
+    # filter for target species
+    target_df = df.loc[df.species_code == target_species]
+    target_locations = target_df.location_id.unique()
+
+    # find habitats where target was never detected
+    other_habitat_df = df.loc[~df.location_id.isin(target_locations)]
+
+    # keep columns specified in utils.py
+    df = df[keep_cols]
+    other_habitat_df = other_habitat_df[keep_cols]
+
+    # group the dataframe by recording_id and aggregate the columns
+    recordings = other_habitat_df.groupby("recording_id").agg(recordings_metadata_dict)
+
+    # add filename column to the dataframe:
+    # recording-<recording_id>.<file_type>
+    recordings["filename"] = recordings.apply(
+        lambda row: "recording-" + str(row.name) + "." + row.file_type, axis=1
+    )
+
+    # add column for relative path and set as index.
+    # This enables AudioFileDataset to find the recordings.
+    recordings["relative_path"] = recordings.apply(
+        lambda row: Path("..")
+        / ".."
+        / "data"
+        / "raw"
+        / "recordings"
+        / f"{target_species}_other_habitats"
+        / row.filename,
+        axis=1,
+    )
+    recordings = recordings.set_index("relative_path")
+
+    # get a list of the files that have already been downloaded
+    # since we may have some downloaded already, and we may need to download more, make dataframes of downloaded and not downloaded reocrdings containing the target species.
+    downloaded_recordings = [file.name for file in (recording_path.glob("*"))]
+    df_downloaded_recordings = recordings.loc[
+        recordings.filename.isin(downloaded_recordings)
+    ]
+    df_not_downloaded = recordings.loc[~recordings.filename.isin(downloaded_recordings)]
+    print(f"{len(df_not_downloaded)} not downloaded")
+
+    def download(n: int = 1):
+        """
+        Download n recordings from the list of recordings that have not been downloaded yet. Save them to data/raw/recordings/target_species
+        """
+        audio_save_path = audio_save_path = Path(
+            BASE_PATH
+            / "data"
+            / "raw"
+            / "recordings"
+            / f"{target_species}_other_habitats"
+        )
+        audio_save_path.mkdir(parents=True, exist_ok=True)
+        download_recordings.from_url(
+            df_not_downloaded, "recording_url", audio_save_path, target=None, n=n
+        )
+
+    download(download_n)
+
+    return df_downloaded_recordings
 
 
 if __name__ == "__main__":
