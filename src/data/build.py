@@ -46,9 +46,9 @@ def report_counts(df: pd.DataFrame, header: str = ""):
 
     print("\n--------------------------------------------------")
     print(header)
-    print(f"recordings per task method = \n {task_methods}")
-    print(f"total recordings = {len(df)}")
-    print("\nTags generated from each tagging method:")
+    print(f"clips per task method = \n {task_methods}")
+    print(f"total clips = {len(df)}")
+    print("\nclips generated from each tagging method:")
     print(present_absent_counts)
     print(f"total present clips =  {present_clips}")
     print(f"total absent clips =  {absent_clips}")
@@ -59,23 +59,30 @@ def report_counts(df: pd.DataFrame, header: str = ""):
 # Split the dataset into training and validation sets
 # This is done by location id, to ensure that the model generalizes to new areas.
 # TODO - also split by date in case some ARUs are within earshot of each other.
-def make_train_valid_split(df, seed=None):
+def make_train_valid_split(df, seed=None, pct_train=0.8):
+    """
+    Makes a location based train/valid or train/test split of a dataframe.
+    pct_train is the proportion of locations to include in the training set.
+    """
+
     np.random.seed(seed)
     # Get unique location_ids and shuffle them
     unique_locations = df["location_id"].unique()
     np.random.shuffle(unique_locations)
 
-    # Split the unique location_ids (80% train, 20% valid)
-    split_index = int(len(unique_locations) * 0.80)
+    # Split the unique location_ids by pct_train e.g. 80% train, 20% valid
+    split_index = int(len(unique_locations) * pct_train)
     train_locations = unique_locations[:split_index]
     valid_locations = unique_locations[split_index:]
 
     # Mark the rows in original DataFrame
     df["is_valid"] = df["location_id"].isin(valid_locations)
 
-    # Split the DataFrame into two based on 'is_valid'
+    # Split the DataFrame into two based on 'is_valid' then drop the column
     train_df = df[df["is_valid"] == False]
     valid_df = df[df["is_valid"] == True]
+    train_df = train_df.drop(columns=["is_valid"])
+    valid_df = valid_df.drop(columns=["is_valid"])
 
     return train_df, valid_df
 
@@ -106,8 +113,6 @@ def new_labelled_df(
         Species code for the target species
     download_n : int
         Number of recordings containing at least one target vocalization to download. Can be 0
-    out_of_habitat_n : int
-        Number of recordings from outside of the target habitat to download. Can be 0
     sample_duration : float
         window length in seconds
     overlap_fraction : float
@@ -158,7 +163,8 @@ def new_labelled_df(
     recordings = recordings.set_index("relative_path")
 
     # get a list of the files that have already been downloaded
-    # since we may have some downloaded already, and we may need to download more, make dataframes of downloaded and not downloaded reocrdings containing the target species.
+    # since we may have some downloaded already and we may need to download more,
+    # make dataframes of downloaded and not downloaded reocrdings containing the target species.
     downloaded_recordings = [file.name for file in (recording_path.glob("*"))]
     df_downloaded_recordings = recordings.loc[
         recordings.filename.isin(downloaded_recordings)
@@ -364,7 +370,3 @@ def other_habitat_df(df, target_species="OSFL", download_n=0, seed=None):
     download(download_n)
 
     return df_downloaded_recordings
-
-
-if __name__ == "__main__":
-    new_labelled_df(df, target_species="OSFL", download_n=0)
