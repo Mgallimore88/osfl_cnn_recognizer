@@ -61,7 +61,7 @@ def calculate_file_durations(df):
     return durations
 
 
-def clean_confidence_cats(df):
+def clean_confidence_cats(df, clean_unchecked=False):
     # Re-label the mis-labelled clips
     df.loc[df["confidence_cat"] == 5, "target_presence"] = 1.0
     df.loc[df["confidence_cat"] == 6, "target_presence"] = 0.0
@@ -69,6 +69,9 @@ def clean_confidence_cats(df):
     # drop the clips with confidence 1 or 2 since these were hard to label and wouldn't constitute clear examples of the target class.
     df = df[df["confidence_cat"] != 1]
     df = df[df["confidence_cat"] != 2]
+    if clean_unchecked:
+        # Drop the unverified clips
+        df = df[df["confidence_cat"] != 0]
     return df
 
 
