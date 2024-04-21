@@ -83,9 +83,9 @@ def show_sample_from_df(df: pd.DataFrame, label: str = "present"):
     label: "present" or "absent"
     """
     if label == "present":
-        sample = df.loc[df.target_presence == 1].sample()
+        sample = df.loc[df.target_present == 1].sample()
     elif label == "absent":
-        sample = df.loc[df.target_presence == 0].sample()
+        sample = df.loc[df.target_present == 0].sample()
 
     path, offset, end_time = sample.index[0]
     duration = end_time - offset
@@ -192,9 +192,14 @@ def plot_locations(
         )
 
     # Load Canada map
-    canada = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres")).query(
-        "name == 'Canada'"
-    )
+    canada = gpd.read_file(
+        "../../references/map//ne_110m_admin_0_countries/ne_110m_admin_0_countries.shp"
+    ).query("SOVEREIGNT == 'Canada'")
+
+    # Depricated
+    # canada = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres")).query(
+    #     "name == 'Canada'"
+    # )
 
     # Determine feature labels for coloring
     top_features = df[feature].value_counts().nlargest(num_features).index.to_list()
@@ -202,7 +207,8 @@ def plot_locations(
     df["_color"] = df[feature].where(df[feature].isin(all_features), "Other")
 
     # Create colormap
-    color_map = plt.cm.get_cmap("tab20", len(all_features))
+    # color_map = plt.cm.get_cmap("tab20", len(all_features))
+    color_map = plt.colormaps.get_cmap("tab20")
 
     # Plot base map
     fig, ax = plt.subplots(figsize=(15, 5))
