@@ -9,6 +9,7 @@ import torch
 import hashlib
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
+from pathlib import Path
 
 
 ### Pandas ###
@@ -386,6 +387,7 @@ def verify_samples(
 
     # display the counts
     print(f"added confidence tag {user_confidence} to the dataframe.")
+    print(f"verification counts for target_present = {ground_truth}")
     print(df.loc[df.target_present == ground_truth].confidence_cat.value_counts())
 
     return df
@@ -416,3 +418,30 @@ def get_recording_durations(df):
     for idx in tqdm(df.index, desc="getting_audio_file_durations"):
         durations.append(opso.Audio.from_file(idx[0]).duration)
     return durations
+
+
+def remove_short_clips(df):
+    """
+    Removes samples from the index of a dataframe that are reported as being short during training.
+
+    This is done by extracting the index information from the file short_samples.log and removing the corresponding samples from the dataframe. First the short_samples.log in the current directory needs
+    """
+
+    # read the contents of invalid_samples.log
+    with open("short_samples.log") as f:
+        short_samples = f.readlines()
+    lines = [x.strip().strip("Path: ") for x in short_samples]
+    lines = [x.split(",") for x in lines]
+    paths = [Path(x[0]) for x in lines]
+    starts = [(x[1]).strip(" start_time: ").strip(" sec") for x in lines]
+    starts = [float(x) for x in starts]
+    ends = [(x[2]).strip(" end_time ").strip(" sec.") for x in lines]
+    ends = [float(x) for x in ends]
+    short_clips = list(zip(paths, starts, ends))
+    short_clips_in_df = df.loc[df.index.isin(short_clips)]
+    if len(short_clips_in_df) > 0:
+        print(f"{len(short_clips_in_df)} short clips dropped from the dataframe:")
+        df.drop(short_clips_in_df.index, inplace=True)
+    else:
+        print("No short clips found in the dataframe.")
+    return df
