@@ -364,6 +364,7 @@ def verify_samples(
     duration = end_time - offset
     audio = opso.Audio.from_file(path, offset=offset, duration=duration)
     spec = opso.Spectrogram.from_audio(audio)
+    print(clip_idx)
     print(
         f"target = {df.loc[clip_idx].target_present}, prediction = {df.loc[clip_idx].predicted} loss = {df.loc[clip_idx].loss}"
     )
