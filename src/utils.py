@@ -321,6 +321,17 @@ def inspect_input_samples(train_df, valid_df, model):
         _ = show_tensor_grid(samples, 4, invert=True)
 
 
+def show_samples_in_df(df, model):
+    """
+    show a quick sample of all the samples in a dataframe after model preprocessing.
+    """
+    # Generate a dataset with the samples we wish to inspect and the model's preprocessor
+    inspection_dataset = opso.AudioFileDataset(df, model.preprocessor)
+    inspection_dataset.bypass_augmentations = True
+    samples = [sample.data for sample in inspection_dataset]
+    _ = show_tensor_grid(samples, 2, invert=True)
+
+
 def verify_samples(
     df: pd.DataFrame, ground_truth=1.0, loss_sorted=False, autolabel=False
 ):
@@ -400,15 +411,15 @@ def get_binary_targets_scores(
 ):
     """
     Calculate the binary predictions needed for confusion matrix and other metrics.
-    target_df: DataFrame with labels in the target_presence column
-    model_predictions_df: DataFrame with model predictions in target_presence column
+    target_df: DataFrame with labels in the target_present column
+    model_predictions_df: DataFrame with model predictions in target_present column
     Returns:
     binary_preds: binary predictions as 0 or 1
     targets: true labels as 0 or 1
     scores: model scores as continuous variables
     """
-    targets = target_df.target_presence.values
-    scores = model_predictions_df.target_presence.values
+    targets = target_df.target_present.values
+    scores = model_predictions_df.target_present.values
     binary_preds = (scores > threshold).astype(float)
     return binary_preds, targets, scores
 
