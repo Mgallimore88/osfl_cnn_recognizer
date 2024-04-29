@@ -4,10 +4,12 @@ import pandas as pd
 from IPython.display import display
 import random
 import opensoundscape as opso
+from opensoundscape.preprocess.utils import show_tensor_grid
 import torch
 import hashlib
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
+from pathlib import Path
 
 
 ### Pandas ###
@@ -50,6 +52,7 @@ keep_cols = [
 ]
 
 
+### Error checking
 def calculate_file_durations(df):
     # Takes multi indexed df with file paths as first index. Returns file durations.
     audio_files = df.index.get_level_values("file").unique().values
@@ -83,9 +86,9 @@ def show_sample_from_df(df: pd.DataFrame, label: str = "present"):
     label: "present" or "absent"
     """
     if label == "present":
-        sample = df.loc[df.target_presence == 1].sample()
+        sample = df.loc[df.target_present == 1].sample()
     elif label == "absent":
-        sample = df.loc[df.target_presence == 0].sample()
+        sample = df.loc[df.target_present == 0].sample()
 
     path, offset, end_time = sample.index[0]
     duration = end_time - offset
@@ -108,14 +111,6 @@ def show_index_from_df(df, idx):
     spec = opso.Spectrogram.from_audio(audio)
     audio.show_widget()
     spec.plot()
-
-
-### Graphing ###
-def print_stats(df):
-    """
-    simple stats
-    """
-    return df.describe()
 
 
 def plot_metrics_across_thresholds(
@@ -192,9 +187,14 @@ def plot_locations(
         )
 
     # Load Canada map
-    canada = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres")).query(
-        "name == 'Canada'"
-    )
+    canada = gpd.read_file(
+        "../../references/map//ne_110m_admin_0_countries/ne_110m_admin_0_countries.shp"
+    ).query("SOVEREIGNT == 'Canada'")
+
+    # Depricated
+    # canada = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres")).query(
+    #     "name == 'Canada'"
+    # )
 
     # Determine feature labels for coloring
     top_features = df[feature].value_counts().nlargest(num_features).index.to_list()
@@ -202,7 +202,8 @@ def plot_locations(
     df["_color"] = df[feature].where(df[feature].isin(all_features), "Other")
 
     # Create colormap
-    color_map = plt.cm.get_cmap("tab20", len(all_features))
+    # color_map = plt.cm.get_cmap("tab20", len(all_features))
+    color_map = plt.colormaps.get_cmap("tab20")
 
     # Plot base map
     fig, ax = plt.subplots(figsize=(15, 5))
@@ -278,6 +279,7 @@ def get_hash_from_df(df):
     return df_hash_value
 
 
+### Viewing input data
 def spec_to_audio(spec_filename, audio_path):
     """
     Utility function to get from a precomputed spectrogram back to the same segment of the audio file.
@@ -302,20 +304,122 @@ def spec_to_audio(spec_filename, audio_path):
     return path, float(offset), duration
 
 
+def inspect_input_samples(train_df, valid_df, model):
+    """
+    show a quick sample of present and absent samples in training and validation sets after model preprocessing.
+    """
+    present_t = train_df.loc[train_df.target_present == 1]
+    absent_t = train_df.loc[train_df.target_present == 0]
+    present_v = valid_df.loc[valid_df.target_present == 1]
+    absent_v = valid_df.loc[valid_df.target_present == 0]
+
+    # Generate a dataset with the samples we wish to inspect and the model's preprocessor
+    for df in [present_t, absent_t, present_v, absent_v]:
+        inspection_dataset = opso.AudioFileDataset(df.sample(12), model.preprocessor)
+        inspection_dataset.bypass_augmentations = True
+        samples = [sample.data for sample in inspection_dataset]
+        _ = show_tensor_grid(samples, 4, invert=True)
+
+
+def show_samples_in_df(df, model):
+    """
+    show a quick sample of all the samples in a dataframe after model preprocessing.
+    """
+    # Generate a dataset with the samples we wish to inspect and the model's preprocessor
+    inspection_dataset = opso.AudioFileDataset(df, model.preprocessor)
+    inspection_dataset.bypass_augmentations = True
+    samples = [sample.data for sample in inspection_dataset]
+    _ = show_tensor_grid(samples, 2, invert=True)
+
+
+def verify_samples(
+    df: pd.DataFrame, ground_truth=1.0, loss_sorted=False, autolabel=False
+):
+    """
+    Present an unverified sample to the user for label verification.
+    The dataframe needs a couple of extra columns:
+    'loss' which is the absolute difference between a pretrained model's prediction and the ground truth.
+    'predicted' which is the model's prediction.
+    'confidence_cat' which is the user's confidence in the label. 0=unverified.
+
+    Args:
+    df: DataFrame indexed by path, start time , end time. Also needs the columns 'loss', 'predicted', 'confidence_cat', 'target_present'.
+
+    ground_truth: the target class to inspect. 1.0 for present, 0.0 for absent.
+
+    loss_sorted: if True, the clips will be sorted by highest loss first. Otherwise they will be chosen in the order they appear in the dataframe.
+
+    autolabel: if a confidence value is provided, the user will not be prompted for input and can just hit return to autolabel the clip.
+
+    """
+    # Filter the split dataset further into unverified and present tags.
+    unverified = df[df["confidence_cat"] == 0]
+    unverified_target_clips = unverified.loc[
+        unverified["target_present"] == ground_truth
+    ]
+    if len(unverified_target_clips) == 0:
+        print("No unverified clips within chosen target class.")
+        return df
+
+    if loss_sorted:
+        # Sort the unverified clips by the loss value.
+        unverified_target_clips = unverified_target_clips.sort_values(
+            by="loss", ascending=False
+        )
+
+    # Set the confidence cat to 0 so that any skipped clips or crashes don't get saved as previous confidence.
+    user_confidence = 0
+
+    clip_idx = unverified_target_clips.index[0]
+    path, offset, end_time = clip_idx
+    duration = end_time - offset
+    audio = opso.Audio.from_file(path, offset=offset, duration=duration)
+    spec = opso.Spectrogram.from_audio(audio)
+    print(clip_idx)
+    print(
+        f"target = {df.loc[clip_idx].target_present}, prediction = {df.loc[clip_idx].predicted} loss = {df.loc[clip_idx].loss}"
+    )
+    audio.show_widget(autoplay=True)
+
+    spec.plot()
+    if autolabel:
+        label = input("press enter to autolabel")
+        if label:
+            user_confidence = label
+        else:
+            user_confidence = autolabel
+
+    elif not autolabel:
+        user_confidence = input(
+            "enter confidence: 1=Discard, 2=Unsure, 3=Verified, 4=Focal, 5=Re-label-as-present, 6=Re-label-as-absent"
+        )
+
+    # save the user input confidence back to the original dataframe.
+    df.loc[clip_idx, "confidence_cat"] = int(user_confidence)
+
+    # display the counts
+    print(f"added confidence tag {user_confidence} to the dataframe.")
+    print(f"verification counts for target_present = {ground_truth}")
+    print(df.loc[df.target_present == ground_truth].confidence_cat.value_counts())
+
+    return df
+
+
+### Evaluation
 def get_binary_targets_scores(
     target_df: pd.DataFrame, model_predictions_df: pd.DataFrame, threshold=0.5
 ):
     """
     Calculate the binary predictions needed for confusion matrix and other metrics.
-    target_df: DataFrame with labels in the target_presence column
-    model_predictions_df: DataFrame with model predictions in target_presence column
+    target_df: DataFrame with labels in the target_present column
+    model_predictions_df: DataFrame with model predictions in target_present column
     Returns:
     binary_preds: binary predictions as 0 or 1
     targets: true labels as 0 or 1
     scores: model scores as continuous variables
     """
-    targets = target_df.target_presence.values
-    scores = model_predictions_df.target_presence.values
+    targets = target_df.target_present.values
+    scores = model_predictions_df.target_present.values
     binary_preds = (scores > threshold).astype(float)
     return binary_preds, targets, scores
 
@@ -326,3 +430,30 @@ def get_recording_durations(df):
     for idx in tqdm(df.index, desc="getting_audio_file_durations"):
         durations.append(opso.Audio.from_file(idx[0]).duration)
     return durations
+
+
+def remove_short_clips(df):
+    """
+    Removes samples from the index of a dataframe that are reported as being short during training.
+
+    This is done by extracting the index information from the file short_samples.log and removing the corresponding samples from the dataframe. First the short_samples.log in the current directory needs
+    """
+
+    # read the contents of invalid_samples.log
+    with open("short_samples.log") as f:
+        short_samples = f.readlines()
+    lines = [x.strip().strip("Path: ") for x in short_samples]
+    lines = [x.split(",") for x in lines]
+    paths = [Path(x[0]) for x in lines]
+    starts = [(x[1]).strip(" start_time: ").strip(" sec") for x in lines]
+    starts = [float(x) for x in starts]
+    ends = [(x[2]).strip(" end_time ").strip(" sec.") for x in lines]
+    ends = [float(x) for x in ends]
+    short_clips = list(zip(paths, starts, ends))
+    short_clips_in_df = df.loc[df.index.isin(short_clips)]
+    if len(short_clips_in_df) > 0:
+        print(f"{len(short_clips_in_df)} short clips dropped from the dataframe:")
+        df.drop(short_clips_in_df.index, inplace=True)
+    else:
+        print("No short clips found in the dataframe.")
+    return df

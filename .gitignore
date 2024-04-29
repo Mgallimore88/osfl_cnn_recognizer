@@ -7,13 +7,17 @@ models/*
 
 # oss tutorials
 notebooks/exploratory_nbs/opensoundscape-tutorials/*
+!notebooks/exploratory_nbs/opensoundscape-tutorials/*ipynb
+
+
+# models and checkpoints
 notebooks/exploratory_nbs/*.model
+notebooks/presentation_nbs/*.model
 notebooks/model_training_checkpoints/*
 model_training_checkpoints/*
 
 
 
-!notebooks/exploratory_nbs/opensoundscape-tutorials/*ipynb
 
 
 # credentials
@@ -27,6 +31,8 @@ __pycache__/
 /wandb/
 notebooks/exploratory_nbs/wandb/
 notebooks/exploratory_nbs/epoch*
+
+notebooks/model_development_walkthrough/wandb/
 
 # C extensions
 *.so
