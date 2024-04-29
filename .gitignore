@@ -32,7 +32,7 @@ __pycache__/
 notebooks/exploratory_nbs/wandb/
 notebooks/exploratory_nbs/epoch*
 
-notebooks/presentation_nbs/wandb/
+notebooks/model_development_walkthrough/wandb/
 
 # C extensions
 *.so
