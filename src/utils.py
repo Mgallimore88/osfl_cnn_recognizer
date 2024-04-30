@@ -10,6 +10,29 @@ import hashlib
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 from pathlib import Path
+import subprocess
+import warnings
+import wandb
+
+
+### General ###
+def get_current_git_branch():
+    # Run the git command to get the current branch
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            check=True,
+            stdout=subprocess.PIPE,
+        )
+        return result.stdout.decode("utf-8").strip()
+    except subprocess.CalledProcessError:
+        return None
+
+
+def suppress_warnings_if_main_branch():
+    current_branch = get_current_git_branch()
+    if current_branch == "main":  # Check if the branch is 'main'
+        warnings.filterwarnings("ignore")  # Suppress all warnings
 
 
 ### Pandas ###
@@ -64,7 +87,7 @@ def calculate_file_durations(df):
     return durations
 
 
-def clean_confidence_cats(df, clean_unchecked=False):
+def clean_confidence_cats(df, drop_unchecked=False):
     # Re-label the mis-labelled clips
     df.loc[df["confidence_cat"] == 5, "target_presence"] = 1.0
     df.loc[df["confidence_cat"] == 6, "target_presence"] = 0.0
@@ -72,10 +95,32 @@ def clean_confidence_cats(df, clean_unchecked=False):
     # drop the clips with confidence 1 or 2 since these were hard to label and wouldn't constitute clear examples of the target class.
     df = df[df["confidence_cat"] != 1]
     df = df[df["confidence_cat"] != 2]
-    if clean_unchecked:
+    if drop_unchecked:
         # Drop the unverified clips
         df = df[df["confidence_cat"] != 0]
     return df
+
+
+def add_missing_metadata_to_df(new_df, source_df, columns_to_add):
+    """
+    Fills in missing metadata to the new dataframe.
+    Metadata is taken from the first matching row in the full dataframe.
+    This is done at the file level.
+    It should only be used for columns which are the same for all clips in a file.
+    """
+    # Initialize latitude and longitude columns in df_focal
+    add_columns = columns_to_add
+    for column in add_columns:
+        new_df[column] = None
+
+    # Loop through each row in new_df to assign latitude and longitude
+    for idx, row in new_df.iterrows():
+        # Fetch the first matching row in source_df for the same 'file'
+        new_columns = source_df.loc[idx[0]].iloc[0][add_columns]
+
+        # Assign new columns
+        for column in add_columns:
+            new_df.at[idx, column] = new_columns[column]
 
 
 def show_sample_from_df(df: pd.DataFrame, label: str = "present"):
@@ -114,16 +159,19 @@ def show_index_from_df(df, idx):
 
 
 def plot_metrics_across_thresholds(
-    df, preds_column: str = "present_pred", title="Metrics across thresholds"
+    df,
+    preds_column: str = "present_pred",
+    label_column: str = "target_present",
+    title: str = "Metrics across thresholds",
 ):
     """
     Plots metrics across a range of thresholds.
 
     args:
 
-    df: a dataframe with the following columns:
-    label: the target for each example
-    preds: name of the column with the predictions
+    df: a dataframe containing the following:
+    label_column: the name of the column containing ground truth for each example
+    preds_column: name of the column with the predictions
     """
     from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score
 
@@ -139,10 +187,10 @@ def plot_metrics_across_thresholds(
         plot_data.append(
             [
                 threshold,
-                accuracy_score(df.label, df.prediction),
-                precision_score(df.label, df.prediction),
-                recall_score(df.label, df.prediction),
-                f1_score(df.label, df.prediction),
+                accuracy_score(df[label_column], df.prediction),
+                precision_score(df[label_column], df.prediction),
+                recall_score(df[label_column], df.prediction),
+                f1_score(df[label_column], df.prediction),
             ]
         )
 
@@ -304,7 +352,7 @@ def spec_to_audio(spec_filename, audio_path):
     return path, float(offset), duration
 
 
-def inspect_input_samples(train_df, valid_df, model):
+def inspect_input_samples(train_df, valid_df, model, bypass_augmentations=True):
     """
     show a quick sample of present and absent samples in training and validation sets after model preprocessing.
     """
@@ -316,7 +364,7 @@ def inspect_input_samples(train_df, valid_df, model):
     # Generate a dataset with the samples we wish to inspect and the model's preprocessor
     for df in [present_t, absent_t, present_v, absent_v]:
         inspection_dataset = opso.AudioFileDataset(df.sample(12), model.preprocessor)
-        inspection_dataset.bypass_augmentations = True
+        inspection_dataset.bypass_augmentations = bypass_augmentations
         samples = [sample.data for sample in inspection_dataset]
         _ = show_tensor_grid(samples, 4, invert=True)
 
@@ -424,6 +472,19 @@ def get_binary_targets_scores(
     return binary_preds, targets, scores
 
 
+### WandB ###
+def log_single_metric_to_wandb(metric, thresholds, name):
+    data = [[x, y] for (x, y) in zip(thresholds, metric)]
+    table = wandb.Table(data=data, columns=["x", "y"])
+    wandb.log(
+        {
+            f"custom {name}": wandb.plot.line(
+                table, "x", "y", title=f"Custom {name} vs threshold plot"
+            )
+        }
+    )
+
+
 ### Error checking ###
 def get_recording_durations(df):
     durations = []
@@ -436,12 +497,17 @@ def remove_short_clips(df):
     """
     Removes samples from the index of a dataframe that are reported as being short during training.
 
-    This is done by extracting the index information from the file short_samples.log and removing the corresponding samples from the dataframe. First the short_samples.log in the current directory needs
+    This is done by extracting the index information from the file short_samples.log and removing the corresponding samples from the dataframe. The paths to the samples are saved in short_sample.log in the following format:
+
+    Path: ../../data/raw/recordings/OSFL/recording-207234.mp3, start_time: 340.5 sec, end_time 343.5 sec.
+
     """
 
     # read the contents of invalid_samples.log
     with open("short_samples.log") as f:
         short_samples = f.readlines()
+
+    # extract the index from the log
     lines = [x.strip().strip("Path: ") for x in short_samples]
     lines = [x.split(",") for x in lines]
     paths = [Path(x[0]) for x in lines]
@@ -449,6 +515,8 @@ def remove_short_clips(df):
     starts = [float(x) for x in starts]
     ends = [(x[2]).strip(" end_time ").strip(" sec.") for x in lines]
     ends = [float(x) for x in ends]
+
+    # make a list of the indices to drop, and drop them if there are any.
     short_clips = list(zip(paths, starts, ends))
     short_clips_in_df = df.loc[df.index.isin(short_clips)]
     if len(short_clips_in_df) > 0:
