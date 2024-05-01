@@ -101,7 +101,9 @@ def clean_confidence_cats(df, drop_unchecked=False):
     return df
 
 
-def add_missing_metadata_to_df(new_df, source_df, columns_to_add):
+def add_missing_metadata_to_df(
+    new_df: pd.DataFrame, source_df: pd.DataFrame, columns_to_add: list
+):
     """
     Fills in missing metadata to the new dataframe.
     Metadata is taken from the first matching row in the full dataframe.
