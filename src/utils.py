@@ -9,6 +9,7 @@ import torch
 import hashlib
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from pathlib import Path
 import subprocess
 import warnings
@@ -184,7 +185,9 @@ def plot_metrics_across_thresholds(
         return df
 
     plot_data = []
-    for threshold in torch.linspace(0, 1, 500):
+    thresholds = torch.linspace(0, 1, 500)
+
+    for threshold in thresholds:
         df = generate_predictions(df, threshold)
         plot_data.append(
             [
@@ -474,6 +477,28 @@ def get_binary_targets_scores(
     return binary_preds, targets, scores
 
 
+def plot_confusion_matrix(
+    target_df: pd.DataFrame,
+    model_predictions_df: pd.DataFrame,
+    threshold=0.5,
+    title: str = "Confusion Matrix",
+):
+    """
+    Plot a confusion matrix.
+    The inputs should be two different pandas dataframes - one containing the target labels and the other containing the model predictions.
+    The dataframe columns should both be named "target_present" for simplicity when viewing predictions made using opensoundscape.
+    """
+    preds, targets, scores = get_binary_targets_scores(
+        target_df, model_predictions_df, threshold
+    )
+    # plot confusion matrix
+    cm = confusion_matrix(targets, preds)
+    disp = ConfusionMatrixDisplay(cm)
+    ax = disp.plot(colorbar=False).ax_
+    ax.set_title(f"{title} \n threshold: {threshold}")
+    return cm
+
+
 ### WandB ###
 def log_single_metric_to_wandb(metric, thresholds, name):
     data = [[x, y] for (x, y) in zip(thresholds, metric)]
@@ -485,6 +510,65 @@ def log_single_metric_to_wandb(metric, thresholds, name):
             )
         }
     )
+
+
+def hawkears_files_to_df(hawkears_output_files, target_species="OSFL"):
+    """
+    Takes a list of file paths containing hawkears predictions as input.
+    Predictions should be made on 3 second audio files saved to disk.
+    Returns a dataframe of predictions per file.
+    This assumes the format of the hawkears output files is as follows:
+    start_time	end_time	species_code;confidence
+    """
+    results = []
+    # Read and parse the file contents
+    for file_path in hawkears_output_files:
+        with open(file_path, "r") as f:
+            file_content = f.read().strip().split("\n")
+            file_id = file_path.split("/")[-1].split("-")[0]
+            file_id = file_id.split("_")[0]
+            for detection in file_content:
+                if detection:
+                    line = [file_id] + detection.split("\t")
+                else:
+                    line = [file_id]
+                results.append(line)
+
+    # Convert the results to a pandas DataFrame
+    df = pd.DataFrame(
+        results, columns=["file_id", "start_time", "end_time", "species;confidence"]
+    )
+    df.file_id = df.file_id.astype(int)
+    df.sort_values(by=["file_id"], inplace=True)
+    df[["species", "confidence"]] = df["species;confidence"].str.split(";", expand=True)
+    df.drop(columns=["species;confidence"], inplace=True)
+    df = df.loc[df["species"] == target_species]
+    df.confidence = df.confidence.astype(float)
+    return df.reset_index(drop=True)
+
+
+def save_dataframe_clips_to_disk(df: pd.DataFrame, save_path: Path):
+    """
+    function for saving the 3 second clips which make up a dataset to disk.
+    saved filename contains a numeric index and the file extension.
+    args:
+    df: pandas dataframe with column ['file_ID'] containing unique numeric index per clip
+    save_path: path to save the clips to
+    """
+    if not any(save_path.iterdir()):
+        print("Saving clips to disk")
+        i = 0
+        for index in df.index:
+            path, start, end = index
+            row_id = int(df.iloc[i].file_ID)
+            clip = audio.Audio.from_file(path, offset=start, duration=end - start)
+            extension = str(path).split(".")[-1]
+            clip.save(save_path / f"{str(row_id)}.{extension}", suppress_warnings=True)
+            i += 1
+    else:
+        print(
+            "Directory is not empty. Set an empty save directory before saving clips."
+        )
 
 
 ### Error checking ###
