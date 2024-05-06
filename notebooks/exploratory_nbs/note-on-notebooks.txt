@@ -2,4 +2,4 @@ The exploratory notebooks are kept as a record of the development process. They 
 
 Earlier notebooks might rely on code which has been removed from /src on the main branch in the interest of keeping the src directory tidy. If needed then this can be found on an eariler branch.
 
-The presentation notebooks are intended to be used as a reference and a guide on how to train your own model. 
+The walkthrough notebooks are intended to be used as a reference and a guide on how to train your own model. 

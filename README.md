@@ -3,21 +3,27 @@ osfl_recognizer
 --------
 
 Project: 
-This project develops a method to build and train a convolutional neural network to recognise 
-the presence or absence of a single bird species in an audio recording. 
 
-Note that this project is unfinished and the readme is a template of intended work. 
+This Python project develops a method to build and train a convolutional neural network to recognize 
+the presence or absence of a single bird species in an audio recording.  The project uses the OpenSoundscape library for audio preprocessing and model training.
+
+[OpenSoundscape](http://opensoundscape.org/en/latest/index.html)
+
+The project trained a model to detect the Olive Sided flycatcher, species code OSFL. The audio to train the model was collected from WildTrax, and tagged in WildTrax. 
+
+(WildTrax)[https://wildtrax.ca/]
 
 
-The project is developed in two parts: 
+__To make predictions__ using the model, clone this GitHub repository, install the requirements in requirements.txt, and run python3 predict.py from the terminal. 
 
-Part 1 describes the process of model development, such that anybody wanting to train a similar model in the future can see the process and will have a good starting point to build upon. 
+The model will process audio files in all the sub-directories of the provided folder, and outputs a .csv file called OSFL-scores.csv which contains the probability of detection for each 3 second segment of the recording files as a moving window advances in 1.5 second increments. 
 
-Part 2 gives a detailed "how to" document on model usage for the OSFL recognizer built during this project. The model can be used to process audio files and outputs a .csv file containing probability of detection for each 3 second segment of the recording. 
+__To train a new model__ look at notebooks/model_training_walkthrough, which contians a series of notebooks showing the training process from start to finish Anybody wanting to train a similar model in the future can see the process and will have a good starting point to build upon.
+The OpenSoundscape documentation and tutorials should be studied and understood since many of the processes used here are implementations of the tools provided by OpenSoundscape. 
 
 Source code is located in the .src folder.
 
-The notebooks folder contains reports which are intended to serve as a source for the documentation of the project. 
+
 --------
 Installation
 --------
@@ -49,38 +55,17 @@ Repeating the process developed in this project
 
 
 --------
-Roadmap for development
---------
-- train initial model on spectrograms with default settings for everything
-- curate a good no-call dataset
-- make sensible test and validation splits
-- re-train the model and try different architectures and models pretrained on different datasets
-- iterate through development until model performance is improved
-- try different data augmentation techniques, spectrogram parameters, and model parameters
-- try reinforcing the model with focal recordings from xeno canto (Exclude these from the validation and test set)
-- once the process is tuned, train the model on the full dataset and increase the model size. 
-- record model performance on the test set
-- export the model to PyTorch model format
-- apply conversion to ONNX format if needed
-- create deployment script for the model with environment and dependencies
-- document the process and create a tutorial for using the model for inference
-
-
 Project Organization
 --------
 
     ├── LICENSE
-    ├── Makefile           <- Makefile with commands like `make data` or `make train`
     ├── README.md          <- The top-level README for developers using this project.
     ├── data
-    │   ├── external       <- Data from third party sources.
     │   ├── interim        <- Intermediate data that has been transformed.
     │   ├── processed      <- The final, canonical data sets for modeling.
     │   └── raw            <- The original, immutable data dump.
-    │
-    ├── docs               <- A default Sphinx project; see sphinx-doc.org for details
-    │
-    ├── models             <- Trained and serialized models, model predictions, or model summaries
+    │    │
+    ├── models             <- Trained models, model predictions, or model summaries
     │
     ├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
     │                         the creator's initials, and a short `-` delimited description, e.g.
@@ -94,31 +79,17 @@ Project Organization
     ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
     │                         generated with `pip freeze > requirements.txt`
     │
-    ├── setup.py           <- makes project pip installable (pip install -e .) so src can be imported
     ├── src                <- Source code for use in this project.
     │   ├── __init__.py    <- Makes src a Python module
     │   │
-    │   ├── data           <- Scripts to download or generate data
-    │   │   └── make_dataset.py
-    │   │
-    │   ├── features       <- Scripts to turn raw data into features for modeling
-    │   │   └── build_features.py
-    │   │
-    │   ├── models         <- Scripts to train models and then use trained models to make
-    │   │   │                 predictions
-    │   │   ├── predict_model.py
-    │   │   └── train_model.py
-    │   │
-    │   └── visualization  <- Scripts to create exploratory and results oriented visualizations
-    │       └── visualize.py
-    │
-    └── tox.ini            <- tox file with settings for running tox; see tox.readthedocs.io
+    │   ├── data           <- Scripts to download or generate data - to be used in 
+    |                         the context of the walkthrough notebooks. 
+    │   
+    ├── utils.py           <- Where the custom functions used during model
+                              development are stored.
+    
 
-
---------
-A note on notebooks. 
-The exploratory notebooks are kept as a record of the development process. They aren't intended as documentation or reference. Techniques described in earlier notebooks might be superceded by newer approaches in later notebooks, and these notebooks might contain incomplete or experimental code. 
---------
+The initial exploratory notebooks are removed from the main branch of this project, and can be found on the dev branch. 
 
 
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
