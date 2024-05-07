@@ -136,8 +136,9 @@ def new_labelled_df(
     target_locations = target_df.location_id.unique()
 
     # keep columns specified in utils.py
-    df = df[keep_cols]
-    target_df = target_df[keep_cols]
+    if drop_extra_cols:
+        df = df[keep_cols]
+        target_df = target_df[keep_cols]
 
     # group the dataframe by recording_id and aggregate the columns
     recordings = target_df.groupby("recording_id").agg(recordings_metadata_dict)

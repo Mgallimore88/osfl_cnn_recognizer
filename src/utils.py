@@ -89,6 +89,10 @@ def calculate_file_durations(df):
 
 
 def clean_confidence_cats(df, drop_unchecked=False):
+    """
+    drops confidence = 2 or 1, and corrects the labels for confidence = 5 and 6.
+    confidence cat 5 means the target is present, 6 means the target is absent.
+    """
     # Re-label the mis-labelled clips
     df.loc[df["confidence_cat"] == 5, "target_present"] = 1.0
     df.loc[df["confidence_cat"] == 6, "target_present"] = 0.0
@@ -428,6 +432,7 @@ def verify_samples(
     duration = end_time - offset
     audio = opso.Audio.from_file(path, offset=offset, duration=duration)
     spec = opso.Spectrogram.from_audio(audio)
+    norm_spec = opso.Spectrogram.from_audio(audio.normalize())
     print(clip_idx)
     print(
         f"target = {df.loc[clip_idx].target_present}, prediction = {df.loc[clip_idx].predicted} loss = {df.loc[clip_idx].loss}"
@@ -435,6 +440,7 @@ def verify_samples(
     audio.show_widget(autoplay=True)
 
     spec.plot()
+    norm_spec.plot()
     if autolabel:
         label = input("press enter to autolabel")
         if label:
