@@ -165,6 +165,21 @@ def show_index_from_df(df, idx):
     spec.plot()
 
 
+def show_clip_from_multi_index_df(df, multi_idx_tuple):
+    """
+    Play audio and plot spectrogram for an item in a dataframe.
+    Index must be a multi index of path, offset, end time.
+    args: df: dataframe with multi index
+    multi_idx_tuple: multi-index tuple of the item to show
+    """
+    path, offset, end_time = multi_idx_tuple
+    duration = end_time - offset
+    audio = opso.Audio.from_file(path, offset=offset, duration=duration)
+    spec = opso.Spectrogram.from_audio(audio)
+    audio.show_widget()
+    spec.plot()
+
+
 def plot_metrics_across_thresholds(
     df,
     preds_column: str = "present_pred",
@@ -179,6 +194,10 @@ def plot_metrics_across_thresholds(
     df: a dataframe containing the following:
     label_column: the name of the column containing ground truth for each example
     preds_column: name of the column with the predictions
+    returns:
+
+    plot_data: accuracy, precision, recall, f1 score for each threshold
+    legend: list of metric names.
     """
     from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score
 
@@ -334,31 +353,6 @@ def get_hash_from_df(df):
 
     print(df_hash_value)
     return df_hash_value
-
-
-### Viewing input data
-def spec_to_audio(spec_filename, audio_path):
-    """
-    Utility function to get from a precomputed spectrogram back to the same segment of the audio file.
-
-    The filename of the spectrogram is used.
-    Filename format:
-    recording-<recording_id>.<file_extension>-<offset>-<end>-.pkl
-    Example filename:
-    recording-4429.mp3-12.0-15.0-.pkl
-
-    Args:
-        spec_filename (str): filename of the spectrogram
-        audio_path (str): path to the audio files
-    Returns:
-        path (str): path to the source audio file
-        offset (float): offset in seconds from beginning of the recording
-        duration (str): duration of the clip in seconds.
-    """
-    _, rec_file, offset, end, _ = spec_filename.split("-")
-    duration = float(end) - float(offset)
-    path = Path(f"{audio_path}/recording-{rec_file}")
-    return path, float(offset), duration
 
 
 def inspect_input_samples(train_df, valid_df, model, bypass_augmentations=True):
@@ -558,7 +552,7 @@ def save_dataframe_clips_to_disk(df: pd.DataFrame, save_path: Path):
     function for saving the 3 second clips which make up a dataset to disk.
     saved filename contains a numeric index and the file extension.
     args:
-    df: pandas dataframe with column ['file_ID'] containing unique numeric index per clip
+    df: pandas dataframe with column ['file_id'] containing unique numeric index per clip
     save_path: path to save the clips to
     """
     if not any(save_path.iterdir()):
@@ -566,14 +560,14 @@ def save_dataframe_clips_to_disk(df: pd.DataFrame, save_path: Path):
         i = 0
         for index in df.index:
             path, start, end = index
-            row_id = int(df.iloc[i].file_ID)
-            clip = audio.Audio.from_file(path, offset=start, duration=end - start)
+            row_id = int(df.iloc[i].file_id)
+            clip = opso.audio.Audio.from_file(path, offset=start, duration=end - start)
             extension = str(path).split(".")[-1]
             clip.save(save_path / f"{str(row_id)}.{extension}", suppress_warnings=True)
             i += 1
     else:
         print(
-            "Directory is not empty. Set an empty save directory before saving clips."
+            "Directory is not empty. Choose an empty save directory to save a new test set."
         )
 
 
@@ -583,6 +577,48 @@ def get_recording_durations(df):
     for idx in tqdm(df.index, desc="getting_audio_file_durations"):
         durations.append(opso.Audio.from_file(idx[0]).duration)
     return durations
+
+
+def inspect_wrong_predictions(
+    mistakes_df: pd.DataFrame,
+    comments_col_name: str | None = None,
+):
+    """
+    go through the false negatives or false positives and label each one with a description
+    indicating something which might have caused it to be missed.
+    input:
+    mistakes_df: pandas dataframe containing the false negatives or false positives.
+    mistakes_df needs to have a multi-index of 1. file path to the recording, 2. clip start time in seconds,
+    3. clip end time in seconds.
+    examples will be returned from the dataframe in order, and comments can be added to the dataframe.
+    """
+    if comments_col_name == None:
+        comments_col_name = input("input a column name to save error comments to")
+
+    def make_comments_column():
+        # Make a column for the comments
+        if comments_col_name is not None:
+            mistakes_df[comments_col_name] = None
+
+    if comments_col_name not in mistakes_df.columns:
+        make_comments_column()
+
+        if comments_col_name not in mistakes_df.columns:
+            reset_comments()
+        for index, row in mistakes_df.iterrows():
+            if pd.isna(row[comments_col_name]):
+                show_clip_from_multi_index_df(mistakes_df, index)
+                comment = input(
+                    "Enter a description of the sample, bg noise, clarity, other species etc."
+                )
+                mistakes_df.at[index, comments_col_name] = comment
+                print(f"Comment saved: {comment}")
+    elif not mistakes_df[comments_col_name].isna().any():
+        print("All comments have been added, showing a sample.")
+        samples = mistakes_df.sample(5)
+        for i, sample in samples.iterrows():
+            show_clip_from_multi_index_df(samples, i)
+            print(f"Comment: {sample[comments_col_name]}")
 
 
 def remove_short_clips(df):
