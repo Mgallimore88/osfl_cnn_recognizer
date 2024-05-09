@@ -560,11 +560,7 @@ def save_dataframe_clips_to_disk(df: pd.DataFrame, save_path: Path):
         i = 0
         for index in df.index:
             path, start, end = index
-<<<<<<< HEAD
             row_id = int(df.iloc[i].file_id)
-=======
-            row_id = int(df.iloc[i].file_ID)
->>>>>>> 29491dbf4dbc75d3e789b77d2a3b204fcaf7a77c
             clip = opso.audio.Audio.from_file(path, offset=start, duration=end - start)
             extension = str(path).split(".")[-1]
             clip.save(save_path / f"{str(row_id)}.{extension}", suppress_warnings=True)
