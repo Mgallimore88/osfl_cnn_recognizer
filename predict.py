@@ -1,5 +1,5 @@
 # imports
-import opensoundscape as opso
+import opensoundscape
 import sys
 from pathlib import Path
 
@@ -18,7 +18,7 @@ for file_path in Path(audio_files_path).rglob("*"):
         audio_files.append(absolute_path)
 
 #  make predicitons using the latest model
-model = opso.load_model(model_save_path / "OSFL.model")
+model = opensoundscape.load_model(model_save_path / "OSFL.model")
 
 cpu_cores = input(
     "Enter the number of CPU cores to use for parallel preprocessing: default is 0: "
