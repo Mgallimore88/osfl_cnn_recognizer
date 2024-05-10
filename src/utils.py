@@ -384,7 +384,11 @@ def show_samples_in_df(df, model):
 
 
 def verify_samples(
-    df: pd.DataFrame, ground_truth=1.0, loss_sorted=False, autolabel=False
+    df: pd.DataFrame,
+    ground_truth: float | None = 1.0,
+    loss_sorted=False,
+    autolabel=False,
+    top_down_listening=False,
 ):
     """
     Present an unverified sample to the user for label verification.
@@ -405,9 +409,13 @@ def verify_samples(
     """
     # Filter the split dataset further into unverified and present tags.
     unverified = df[df["confidence_cat"] == 0]
-    unverified_target_clips = unverified.loc[
-        unverified["target_present"] == ground_truth
-    ]
+    if ground_truth is not None:
+        unverified_target_clips = unverified.loc[
+            unverified["target_present"] == ground_truth
+        ]
+    elif ground_truth is None:  # for top down listening
+        unverified_target_clips = unverified
+
     if len(unverified_target_clips) == 0:
         print("No unverified clips within chosen target class.")
         return df
@@ -428,21 +436,36 @@ def verify_samples(
     spec = opso.Spectrogram.from_audio(audio)
     norm_spec = opso.Spectrogram.from_audio(audio.normalize())
     print(clip_idx)
-    print(
-        f"target = {df.loc[clip_idx].target_present}, prediction = {df.loc[clip_idx].predicted} loss = {df.loc[clip_idx].loss}"
-    )
-    audio.show_widget(autoplay=True)
+    if "target_present" in df.columns:
+        print(
+            f"target = {df.loc[clip_idx].target_present}, prediction = {df.loc[clip_idx].predicted} loss = {df.loc[clip_idx].loss}"
+        )
+    elif top_down_listening:
+        print(f"prediction = {df.loc[clip_idx].predicted}")
+    else:
+        print(
+            "please provide a dataframe with the ground truth in the target present column"
+        )
 
+    # display the data
+    audio.show_widget(autoplay=True)
     spec.plot()
     norm_spec.plot()
+
+    if top_down_listening:
+        autolabel = 1
+        print(
+            "top down listening mode: press enter to autolabel as present or 2 for absent"
+        )
+
     if autolabel:
-        label = input("press enter to autolabel")
+        label = input(f"press enter to autolabel {autolabel}")
         if label:
             user_confidence = label
         else:
             user_confidence = autolabel
 
-    elif not autolabel:
+    else:
         user_confidence = input(
             "enter confidence: 1=Discard, 2=Unsure, 3=Verified, 4=Focal, 5=Re-label-as-present, 6=Re-label-as-absent"
         )
@@ -452,9 +475,21 @@ def verify_samples(
 
     # display the counts
     print(f"added confidence tag {user_confidence} to the dataframe.")
-    print(f"verification counts for target_present = {ground_truth}")
-    print(df.loc[df.target_present == ground_truth].confidence_cat.value_counts())
+    if ground_truth is not None:
+        print(f"verification counts for target_present = {ground_truth}")
+        print(df.loc[df.target_present == ground_truth].confidence_cat.value_counts())
+    elif ground_truth is None:
+        print("verification counts for all clips")
+        print(df.confidence_cat.value_counts())
 
+    return df
+
+
+def top_down_listen(df: pd.DataFrame):
+    if "confidence_cat" not in df.columns:
+        df["confidence_cat"] = 0
+
+    verify_samples(df, ground_truth=None, top_down_listening=True)
     return df
 
 
