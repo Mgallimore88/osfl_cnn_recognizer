@@ -1,5 +1,0 @@
-The exploratory notebooks are kept as a record of the development process. They aren't intended as documentation or reference. Techniques described in earlier notebooks might be superseded by newer approaches in later notebooks, and these notebooks might contain incomplete or experimental code. 
-
-Earlier notebooks might rely on code which has been removed from /src on the main branch in the interest of keeping the src directory tidy. If needed then this can be found on an eariler branch.
-
-The walkthrough notebooks are intended to be used as a reference and a guide on how to train your own model. 

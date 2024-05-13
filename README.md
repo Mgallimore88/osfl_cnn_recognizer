@@ -16,16 +16,20 @@ This project uses audio collected from locations across Canada, and tagged on Wi
 (WildTrax)[https://wildtrax.ca/]
 
 
-
-__To make predictions__ using the model, clone this GitHub repository, install the requirements in requirements.txt, and run python3 predict.py from the terminal. 
+__To make predictions__ using the model, clone this GitHub repository,
+Download the model from
+https://www.dropbox.com/scl/fi/cx2rblf6yyyoe19kzm4um/OSFL.model?rlkey=wv7c9ll7n2ie1hdn5rk0m9lox&st=2fjauncs&dl=0
+and place it in osfl_cnn_recognizer/models
+install opensoundscape version 0.10.0
+run python3 predict.py from the terminal. 
 
 The model will process audio files in all the sub-directories of the provided folder, and outputs a .csv file called OSFL-scores.csv which contains the probability of detection for each 3 second segment of the recording files as a moving window advances in 1.5 second increments. 
 
 __To train a new model__ look at notebooks/model_training_walkthrough, which contians a series of notebooks showing the training process from start to finish. Anybody wanting to train a similar model in the future can see the process and will have a good starting point to build upon, however the audio used to train the model needs obtaining from a WildTrax organization. 
 
-The OpenSoundscape documentation and tutorials should be studied and understood since many of the processes used here are implementations of the tools provided by OpenSoundscape. 
+The OpenSoundscape documentation and tutorials should be studied and understood since many of the processes used here are implementations of the tools provided by OpenSoundscape.
 
-Source code is located in the .src folder.
+Source code is located in the .src folder, and is intended to be used in the context of the notebooks.
 
 
 --------
@@ -34,12 +38,10 @@ Installation
 For manual installation:
 from the terminal type
 - clone this GitHub repository
-- install conda
 - open bash terminal then run 
 conda create --name osfl pip python=3.10
 conda activate osfl
 pip install opensoundscape==0.10.0
-
 
 more details in 'installing opensoundscape.txt'
 --------

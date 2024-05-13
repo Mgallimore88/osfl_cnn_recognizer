@@ -76,18 +76,6 @@ keep_cols = [
 ]
 
 
-### Error checking
-def calculate_file_durations(df):
-    # Takes multi indexed df with file paths as first index. Returns file durations.
-    audio_files = df.index.get_level_values("file").unique().values
-    opso.Audio.from_file(audio_files[0]).duration
-    durations = []
-    for file in audio_files:
-        audio = opso.Audio.from_file(file)
-        durations.append(audio.duration)
-    return durations
-
-
 def clean_confidence_cats(df, drop_unchecked=False):
     """
     drops confidence = 2 or 1, and corrects the labels for confidence = 5 and 6.
@@ -128,113 +116,6 @@ def add_missing_metadata_to_df(
         # Assign new columns
         for column in add_columns:
             new_df.at[idx, column] = new_columns[column]
-
-
-def show_sample_from_df(df: pd.DataFrame, label: str = "present"):
-    """
-    Play audio and plot spectrogram for an item in a dataframe.
-    Index must be a multi index of path, offset, end time.
-    args: df: dataframe with multi index
-    label: "present" or "absent"
-    """
-    if label == "present":
-        sample = df.loc[df.target_present == 1].sample()
-    elif label == "absent":
-        sample = df.loc[df.target_present == 0].sample()
-
-    path, offset, end_time = sample.index[0]
-    duration = end_time - offset
-    audio = opso.Audio.from_file(path, offset=offset, duration=duration)
-    spec = opso.Spectrogram.from_audio(audio)
-    audio.show_widget()
-    spec.plot()
-
-
-def show_index_from_df(df, idx):
-    """
-    Play audio and plot spectrogram for an item in a dataframe.
-    Index must be a multi index of path, offset, end time.
-    args: df: dataframe with multi index
-    idx: index of the item to show
-    """
-    path, offset, end_time = df.index[idx]
-    duration = end_time - offset
-    audio = opso.Audio.from_file(path, offset=offset, duration=duration)
-    spec = opso.Spectrogram.from_audio(audio)
-    audio.show_widget()
-    spec.plot()
-
-
-def show_clip_from_multi_index_df(df, multi_idx_tuple):
-    """
-    Play audio and plot spectrogram for an item in a dataframe.
-    Index must be a multi index of path, offset, end time.
-    args: df: dataframe with multi index
-    multi_idx_tuple: multi-index tuple of the item to show
-    """
-    path, offset, end_time = multi_idx_tuple
-    duration = end_time - offset
-    audio = opso.Audio.from_file(path, offset=offset, duration=duration)
-    spec = opso.Spectrogram.from_audio(audio)
-    audio.show_widget()
-    spec.plot()
-
-
-def plot_metrics_across_thresholds(
-    df,
-    preds_column: str = "present_pred",
-    label_column: str = "target_present",
-    title: str = "Metrics across thresholds",
-):
-    """
-    Plots metrics across a range of thresholds.
-
-    args:
-
-    df: a dataframe containing the following:
-    label_column: the name of the column containing ground truth for each example
-    preds_column: name of the column with the predictions
-    returns:
-
-    plot_data: accuracy, precision, recall, f1 score for each threshold
-    legend: list of metric names.
-    """
-    from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score
-
-    def generate_predictions(df, threshold):
-        df["prediction"] = df.apply(
-            lambda x: 1 if x[preds_column] > threshold else 0, axis=1
-        )
-        return df
-
-    plot_data = []
-    thresholds = torch.linspace(0, 1, 500)
-
-    for threshold in thresholds:
-        df = generate_predictions(df, threshold)
-        plot_data.append(
-            [
-                threshold,
-                accuracy_score(df[label_column], df.prediction),
-                precision_score(df[label_column], df.prediction),
-                recall_score(df[label_column], df.prediction),
-                f1_score(df[label_column], df.prediction),
-            ]
-        )
-
-    thresholds, accuracies, precisions, recalls, f1s = zip(*plot_data)
-    plt.plot(thresholds, accuracies)
-    plt.plot(thresholds, precisions)
-    plt.plot(thresholds, recalls)
-    plt.plot(thresholds, f1s)
-    ax, fig = plt.gca(), plt.gcf()
-    ax.set_xlabel("Threshold")
-    ax.set_ylabel("Metric")
-    legend = ["Accuracy", "Precision", "Recall", "F1 Score"]
-    ax.legend(legend)
-    ax.set_title(title)
-    plt.show()
-    return plot_data, legend
 
 
 ### Location and GeoPandas ###
@@ -353,6 +234,57 @@ def get_hash_from_df(df):
 
     print(df_hash_value)
     return df_hash_value
+
+
+### Inspecting data ###
+def show_sample_from_df(df: pd.DataFrame, label: str = "present"):
+    """
+    Play audio and plot spectrogram for an item in a dataframe.
+    Index must be a multi index of path, offset, end time.
+    args: df: dataframe with multi index
+    label: "present" or "absent"
+    """
+    if label == "present":
+        sample = df.loc[df.target_present == 1].sample()
+    elif label == "absent":
+        sample = df.loc[df.target_present == 0].sample()
+
+    path, offset, end_time = sample.index[0]
+    duration = end_time - offset
+    audio = opso.Audio.from_file(path, offset=offset, duration=duration)
+    spec = opso.Spectrogram.from_audio(audio)
+    audio.show_widget()
+    spec.plot()
+
+
+def show_index_from_df(df, idx):
+    """
+    Play audio and plot spectrogram for an item in a dataframe.
+    Index must be a multi index of path, offset, end time.
+    args: df: dataframe with multi index
+    idx: index of the item to show
+    """
+    path, offset, end_time = df.index[idx]
+    duration = end_time - offset
+    audio = opso.Audio.from_file(path, offset=offset, duration=duration)
+    spec = opso.Spectrogram.from_audio(audio)
+    audio.show_widget()
+    spec.plot()
+
+
+def show_clip_from_multi_index_df(df, multi_idx_tuple):
+    """
+    Play audio and plot spectrogram for an item in a dataframe.
+    Index must be a multi index of path, offset, end time.
+    args: df: dataframe with multi index
+    multi_idx_tuple: multi-index tuple of the item to show
+    """
+    path, offset, end_time = multi_idx_tuple
+    duration = end_time - offset
+    audio = opso.Audio.from_file(path, offset=offset, duration=duration)
+    spec = opso.Spectrogram.from_audio(audio)
+    audio.show_widget()
+    spec.plot()
 
 
 def inspect_input_samples(train_df, valid_df, model, bypass_augmentations=True):
@@ -492,7 +424,7 @@ def top_down_listen(df: pd.DataFrame):
     verify_samples(df, ground_truth=None, top_down_listening=True)
 
 
-### Evaluation
+### Evaluation and metrics ###
 def get_binary_targets_scores(
     target_df: pd.DataFrame, model_predictions_df: pd.DataFrame, threshold=0.5
 ):
@@ -509,6 +441,63 @@ def get_binary_targets_scores(
     scores = model_predictions_df.target_present.values
     binary_preds = (scores > threshold).astype(float)
     return binary_preds, targets, scores
+
+
+def plot_metrics_across_thresholds(
+    df,
+    preds_column: str = "present_pred",
+    label_column: str = "target_present",
+    title: str = "Metrics across thresholds",
+):
+    """
+    Plots metrics across a range of thresholds.
+
+    args:
+
+    df: a dataframe containing the following:
+    label_column: the name of the column containing ground truth for each example
+    preds_column: name of the column with the predictions
+    returns:
+
+    plot_data: accuracy, precision, recall, f1 score for each threshold
+    legend: list of metric names.
+    """
+    from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score
+
+    def generate_predictions(df, threshold):
+        df["prediction"] = df.apply(
+            lambda x: 1 if x[preds_column] > threshold else 0, axis=1
+        )
+        return df
+
+    plot_data = []
+    thresholds = torch.linspace(0, 1, 500)
+
+    for threshold in thresholds:
+        df = generate_predictions(df, threshold)
+        plot_data.append(
+            [
+                threshold,
+                accuracy_score(df[label_column], df.prediction),
+                precision_score(df[label_column], df.prediction),
+                recall_score(df[label_column], df.prediction),
+                f1_score(df[label_column], df.prediction),
+            ]
+        )
+
+    thresholds, accuracies, precisions, recalls, f1s = zip(*plot_data)
+    plt.plot(thresholds, accuracies)
+    plt.plot(thresholds, precisions)
+    plt.plot(thresholds, recalls)
+    plt.plot(thresholds, f1s)
+    ax, fig = plt.gca(), plt.gcf()
+    ax.set_xlabel("Threshold")
+    ax.set_ylabel("Metric")
+    legend = ["Accuracy", "Precision", "Recall", "F1 Score"]
+    ax.legend(legend)
+    ax.set_title(title)
+    plt.show()
+    return plot_data, legend
 
 
 def plot_confusion_matrix(
@@ -544,6 +533,9 @@ def log_single_metric_to_wandb(metric, thresholds, name):
             )
         }
     )
+
+
+### parsing data ###
 
 
 def hawkears_files_to_df(hawkears_output_files, target_species="OSFL"):
@@ -613,6 +605,16 @@ def get_recording_durations(df):
     return durations
 
 
+def calculate_file_durations(df):
+    # Takes multi indexed df with file paths as first index. Returns file durations.
+    audio_files = df.index.get_level_values("file").unique().values
+    durations = []
+    for file in audio_files:
+        audio = opso.Audio.from_file(file)
+        durations.append(audio.duration)
+    return durations
+
+
 def inspect_wrong_predictions(
     mistakes_df: pd.DataFrame,
     comments_col_name: str | None = None,
@@ -662,7 +664,6 @@ def remove_short_clips(df):
     This is done by extracting the index information from the file short_samples.log and removing the corresponding samples from the dataframe. The paths to the samples are saved in short_sample.log in the following format:
 
     Path: ../../data/raw/recordings/OSFL/recording-207234.mp3, start_time: 340.5 sec, end_time 343.5 sec.
-
     """
 
     # read the contents of invalid_samples.log
