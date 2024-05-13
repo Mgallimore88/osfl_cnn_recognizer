@@ -16,6 +16,7 @@ This project uses audio collected from locations across Canada, and tagged on Wi
 (WildTrax)[https://wildtrax.ca/]
 
 
+
 __To make predictions__ using the model, clone this GitHub repository, install the requirements in requirements.txt, and run python3 predict.py from the terminal. 
 
 The model will process audio files in all the sub-directories of the provided folder, and outputs a .csv file called OSFL-scores.csv which contains the probability of detection for each 3 second segment of the recording files as a moving window advances in 1.5 second increments. 
@@ -37,7 +38,16 @@ from the terminal type
 - open bash terminal then run 
 conda create --name osfl pip python=3.10
 conda activate osfl
-pip install requirements.txt
+pip install opensoundscape==0.10.0
+
+
+more details in 'installing opensoundscape.txt'
+--------
+Usage:
+--------
+
+python3 predict.py
+
 --------
 Project Organization
 --------
@@ -74,6 +84,3 @@ Project Organization
     
 
 The initial exploratory notebooks are removed from the main branch of this project, and can be found on the dev branch.
-
-
-<p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
