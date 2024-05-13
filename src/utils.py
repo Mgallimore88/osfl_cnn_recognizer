@@ -490,7 +490,6 @@ def top_down_listen(df: pd.DataFrame):
         df["confidence_cat"] = 0
 
     verify_samples(df, ground_truth=None, top_down_listening=True)
-    return df
 
 
 ### Evaluation

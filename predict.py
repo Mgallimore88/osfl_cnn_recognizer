@@ -2,6 +2,7 @@
 import opensoundscape
 import sys
 from pathlib import Path
+from datetime import datetime
 
 BASE_PATH = Path.cwd()
 sys.path.append(str(BASE_PATH))
@@ -24,6 +25,9 @@ cpu_cores = input(
     "Enter the number of CPU cores to use for parallel preprocessing: default is 0: "
 )
 print("====== Making predictions on audio files...======")
+# Make sure you're using the GPU - it should say 'cuda' if you are on a pc and 'mps' on a mac.
+print(f"model.device is: {model.device}")
+# make predictions
 scores = model.predict(
     audio_files,
     overlap_fraction=0.5,
@@ -33,5 +37,5 @@ scores = model.predict(
 )
 
 # save the predictions to a csv file
-print("====== Saved the predictions to scores.csv======")
-scores.to_csv("OSFL-scores.csv", index=True)
+print(f"====== Saved the predictions to OSFL-scores-{datetime.now()}.csv======")
+scores.to_csv(f"OSFL-scores-{datetime.now()}.csv", index=True)
