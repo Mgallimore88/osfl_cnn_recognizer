@@ -1,8 +1,7 @@
---------
-osfl_recognizer
+# osfl_recognizer
 --------
 
-Project: 
+## About: 
 
 This Python project develops a method to build and train a convolutional neural network to recognize 
 the presence or absence of a single bird species in an audio recording.  
@@ -10,14 +9,14 @@ the presence or absence of a single bird species in an audio recording.
 The project uses the [OpenSoundscape](http://opensoundscape.org/en/latest/index.html) library for audio preprocessing and model training.
 
 
-This project uses audio collected from locations across Canada, and tagged on (WildTrax)[https://wildtrax.ca/] by human listeners. This project trained a model to detect the Olive Sided flycatcher, species code OSFL.
+This project uses audio collected from locations across Canada, and tagged on [WildTrax](https://wildtrax.ca/) by human listeners. This project trained a model to detect the __Olive Sided flycatcher__, species code OSFL.
 
 
 
 
 ## To make predictions using the model
 - you'll need [git](https://git-scm.com/) and [Anaconda](https://anaconda.org/) installed. 
-- Additionally if you're using Windows, follow the instructions [here](./installing opensoundscape on windows.txt) to install WSL
+- Additionally if you're using Windows, follow the instructions [here](installing opensoundscape on windows.txt) to install WSL
 
 - clone this GitHub repository by running the following command in the terminal:<br>
 `git clone https://github.com/Mgallimore88/osfl_cnn_recognizer.git` <br>
