@@ -6,12 +6,12 @@
 This Python project develops a method to build and train a convolutional neural network to recognize 
 the presence or absence of a single bird species in an audio recording.  
 
+The finished model is made available to make predictions on local audio files. 
+
 The project uses the [OpenSoundscape](http://opensoundscape.org/en/latest/index.html) library for audio preprocessing and model training.
 
 
 This project uses audio collected from locations across Canada, and tagged on [WildTrax](https://wildtrax.ca/) by human listeners. This project trained a model to detect the __Olive Sided flycatcher__, species code OSFL.
-
-
 
 
 ## To make predictions using the model
@@ -33,7 +33,9 @@ __making predictions__
 `python3 predict.py` <br>
 Enter the absolute path to the folder containing the recordings you want to analyze when prompted.
 
-The model will process audio files in all the sub-directories of the provided folder, and outputs a .csv file called OSFL-scores.csv which contains the confidence of detection for each 3 second segment of the recording files as a moving window advances in 1.5 second increments. 
+The model will process audio files in all the sub-directories of the provided folder, and outputs a .csv file called OSFL-Scores-<current-time>.csv which contains the confidence of detection for each 3 second segment of the recording files as a moving window advances in 1.5 second increments. 
+
+ Try to chunk the work into batches in case something crashes, since currently saving only happens on completion of the predict.py program. 
 
 Suggested threshold to start ~ 0.8
 

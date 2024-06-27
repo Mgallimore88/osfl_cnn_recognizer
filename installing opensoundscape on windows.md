@@ -15,16 +15,16 @@ wsl --install --distribution Ubuntu-22.04
 If you haven't already, 
 enter the following in the teminal:
 
-conda create --name opensoundscape pip python=3.10conda activate opensoundscape
-conda activate opensoundscape
-pip install opensoundscape==0.10.0
+`conda create --name osfl-recognizer python=3.10` <br> 
+`conda activate osfl-recognizer`
+`pip install numpy<2.0`
+`pip install opensoundscape==0.10.0`
 
 4. clone this github repository from within Windows Subsystem for Linux, or download it as a zip file and unzip it in
-Linux / Ubuntu.22.04 / home / <user name> / osfl_cnn_recognizer
+Linux / Ubuntu.22.04 / home / "your user name" / osfl_cnn_recognizer
 
-5. Download the model OSFL.model
-if they aren't included when cloning the repository,
-models should be saved in the project root osfl_cnn_recognizer / models 
+5. Download OSFL.model [here](https://www.dropbox.com/scl/fi/cx2rblf6yyyoe19kzm4um/OSFL.model?rlkey=wv7c9ll7n2ie1hdn5rk0m9lox&st=2fjauncs&dl=0) and place it in osfl_cnn_recognizer/models 
+
 This model was trained using opensoundscape 0.10.0 so make sure that's the version you have installed.
 
 
