@@ -16,7 +16,8 @@ This project uses audio collected from locations across Canada, and tagged on Wi
 (WildTrax)[https://wildtrax.ca/]
 
 
-__To make predictions__ using the model, clone this GitHub repository,<br>
+__To make predictions__ using the model, 
+- `clone this GitHub repository` <br>
 Download the model from [here](https://www.dropbox.com/scl/fi/cx2rblf6yyyoe19kzm4um/OSFL.model?rlkey=wv7c9ll7n2ie1hdn5rk0m9lox&st=2fjauncs&dl=0)
 
 and place it in osfl_cnn_recognizer/models <br>
