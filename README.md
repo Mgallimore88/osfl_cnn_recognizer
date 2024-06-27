@@ -7,32 +7,32 @@ Project:
 This Python project develops a method to build and train a convolutional neural network to recognize 
 the presence or absence of a single bird species in an audio recording.  
 
-The project uses the OpenSoundscape library for audio preprocessing and model training.
-
-[OpenSoundscape](http://opensoundscape.org/en/latest/index.html)
-
-This project uses audio collected from locations across Canada, and tagged on WildTrax by human listeners. This project trained a model to detect the Olive Sided flycatcher, species code OSFL.
-
-(WildTrax)[https://wildtrax.ca/]
+The project uses the [OpenSoundscape](http://opensoundscape.org/en/latest/index.html) library for audio preprocessing and model training.
 
 
-__To make predictions__ using the model, 
+This project uses audio collected from locations across Canada, and tagged on (WildTrax)[https://wildtrax.ca/] by human listeners. This project trained a model to detect the Olive Sided flycatcher, species code OSFL.
+
+
+
+
+## To make predictions using the model
 - `clone this GitHub repository` <br>
-Download the model from [here](https://www.dropbox.com/scl/fi/cx2rblf6yyyoe19kzm4um/OSFL.model?rlkey=wv7c9ll7n2ie1hdn5rk0m9lox&st=2fjauncs&dl=0)
+- `cd osfl-cnn-recognizer` <br>
+- Download OSFL.model from [here](https://www.dropbox.com/scl/fi/cx2rblf6yyyoe19kzm4um/OSFL.model?rlkey=wv7c9ll7n2ie1hdn5rk0m9lox&st=2fjauncs&dl=0) and place it in osfl_cnn_recognizer/models <br>
 
-and place it in osfl_cnn_recognizer/models <br>
-create a new conda environment with python 3.9 or higher by runnging the following command in the terminal:<br>
+- create a new conda environment with python 3.9 or higher by running the following commands in a bash terminal: <br>
 `conda create --name osfl-recognizer python==3.9` <br>
-activate the environment using `conda activate osfl-recognizer` <br>
-install the requirements using `pip install -r requirements.txt` <br>
-run `python3 predict.py` from the terminal. <br>
-enter the absolute path to the folder containing the recordings you want to analyze. 
+`conda activate osfl-recognizer` <br>
+`pip install -r requirements.txt` <br>
+`python3 predict.py` <br>
+Enter the absolute path to the folder containing the recordings you want to analyze when prompted.
 
-The model will process audio files in all the sub-directories of the provided folder, and outputs a .csv file called OSFL-scores.csv which contains the probability of detection for each 3 second segment of the recording files as a moving window advances in 1.5 second increments. 
+The model will process audio files in all the sub-directories of the provided folder, and outputs a .csv file called OSFL-scores.csv which contains the confidence of detection for each 3 second segment of the recording files as a moving window advances in 1.5 second increments. 
 
-__To train a new model__ look at notebooks/model_training_walkthrough, which contians a series of notebooks showing the training process from start to finish. Anybody wanting to train a similar model in the future can see the process and will have a good starting point to build upon, however the audio used to train the model needs obtaining from a WildTrax organization. 
+## To train a new model 
+look at _notebooks/model_training_walkthrough_, which contians a series of notebooks showing the training process from start to finish. Anybody wanting to train a similar model in the future can see the process and will have a good starting point to build upon, however the audio used to train the model needs obtaining from a WildTrax organization. 
 
-The OpenSoundscape documentation and tutorials should be studied and understood since many of the processes used here are implementations of the tools provided by OpenSoundscape.
+The OpenSoundscape documentation and tutorials should be studied and understood since many of the processes used here are implementations of the tools provided by the OpenSoundscape library.
 
 Source code is located in the .src folder, and is intended to be used in the context of the notebooks.
 
