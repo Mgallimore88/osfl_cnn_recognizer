@@ -46,28 +46,8 @@ The OpenSoundscape documentation and tutorials should be studied and understood 
 
 Source code is located in the .src folder, and is intended to be used in the context of the notebooks.
 
-
---------
-Installation
---------
-For manual installation:
-from the terminal type
-- clone this GitHub repository
-- open bash terminal then run 
-conda create --name osfl pip python=3.10
-conda activate osfl
-pip install opensoundscape==0.10.0
-
-more details in 'installing opensoundscape.txt'
---------
-Usage:
---------
-
-python3 predict.py
-
---------
-Project Organization
---------
+-------
+### Project Organization
 
     ├── LICENSE
     ├── README.md          <- The top-level README for developers using this project.
