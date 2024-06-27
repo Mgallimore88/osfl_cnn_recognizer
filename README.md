@@ -5,10 +5,9 @@
 This Python project develops a method to build and train a convolutional neural network to recognize 
 the presence or absence of a single bird species in an audio recording.  
 
-The finished model is made available to make predictions on local audio files. 
+The trained model is made available to make predictions on local audio files. 
 
 The project uses the [OpenSoundscape](http://opensoundscape.org/en/latest/index.html) library for audio preprocessing and model training.
-
 
 This project uses audio collected from locations across Canada, and tagged on [WildTrax](https://wildtrax.ca/) by human listeners. This project trained a model to detect the __Olive Sided flycatcher__, species code OSFL.
 
@@ -21,16 +20,18 @@ This project uses audio collected from locations across Canada, and tagged on [W
 `git clone https://github.com/Mgallimore88/osfl_cnn_recognizer.git` <br>
 - change directory to the project root:<br>
 `cd osfl-cnn-recognizer` <br>
-- Download OSFL.model from [here](https://www.dropbox.com/scl/fi/cx2rblf6yyyoe19kzm4um/OSFL.model?rlkey=wv7c9ll7n2ie1hdn5rk0m9lox&st=2fjauncs&dl=0) and place it in osfl_cnn_recognizer/models <br>
+- Download OSFL.model from [here](https://www.dropbox.com/scl/fi/cx2rblf6yyyoe19kzm4um/OSFL.model?rlkey=wv7c9ll7n2ie1hdn5rk0m9lox&st=2fjauncs&dl=0) and place it in __osfl_cnn_recognizer/models__ <br>
 
 - create and activate a new conda environment with python 3.9 or higher by running the following commands in a bash terminal: <br>
 `conda create --name osfl-recognizer python==3.9` <br>
 `conda activate osfl-recognizer` <br>
 `pip install -r requirements.txt` <br>
 
-__making predictions__
+## making predictions
 `python3 predict.py` <br>
 Enter the absolute path to the folder containing the recordings you want to analyze when prompted.
+
+Enter the number of cpu cores to use for preprocessing. For small jobs use 0, for large jobs try using 4 or 8 if your computer has that many cores.
 
 The model will process audio files in all the sub-directories of the provided folder, and outputs a .csv file called OSFL-Scores-<current-time>.csv which contains the confidence of detection for each 3 second segment of the recording files as a moving window advances in 1.5 second increments. 
 
