@@ -20,10 +20,12 @@ __To make predictions__ using the model, clone this GitHub repository,<br>
 Download the model from ![here](https://www.dropbox.com/scl/fi/cx2rblf6yyyoe19kzm4um/OSFL.model?rlkey=wv7c9ll7n2ie1hdn5rk0m9lox&st=2fjauncs&dl=0)
 
 and place it in osfl_cnn_recognizer/models <br>
-create a new conda environment with python 3.9 or higher with `conda create --name osfl-recognizer python==3.9` <br>
-activate the environment using conda `activate osfl-recognizer` <br>
+create a new conda environment with python 3.9 or higher by runnging the following command in the terminal:<br>
+`conda create --name osfl-recognizer python==3.9` <br>
+activate the environment using `conda activate osfl-recognizer` <br>
 install the requirements using `pip install -r requirements.txt` <br>
 run `python3 predict.py` from the terminal. <br>
+enter the absolute path to the folder containing the recordings you want to analyze. 
 
 The model will process audio files in all the sub-directories of the provided folder, and outputs a .csv file called OSFL-scores.csv which contains the probability of detection for each 3 second segment of the recording files as a moving window advances in 1.5 second increments. 
 
