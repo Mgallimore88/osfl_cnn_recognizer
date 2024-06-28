@@ -1,4 +1,4 @@
-### Installation on Windows ###
+# Installation on Windows
 
 1. Install WSL: Follow the instructions at http://opensoundscape.org/en/latest/installation/windows.html in order to install Windows Subsysyem for Linux, but when prompted to install opensoundscape __0.10.1__, install opensoundscape __0.10.0__ instead.
 
@@ -31,22 +31,8 @@ Linux / Ubuntu.22.04 / home / "your user name" / osfl_cnn_recognizer
 This model was trained using opensoundscape 0.10.0 so make sure that's the version you have installed.
 
 
-### Installation on mac and linux ###
-This is the same as installation on windows, except that you don't need to install WSL. 
-Follow the instructions on how to install opensoundscape with Anaconda here, but use opensoundscape 0.10.0 instead:
-http://opensoundscape.org/en/latest/installation/mac_and_linux.html#installation-via-anaconda
+# To make predictions
 
-
-### To make predictions ###
-This model will make predictions on all of the wav, flac or mp3 files in the child folders of the provided directory. 
-
-The results will be saved in a .csv file called OSFL-Scores-<current-time>.csv at the project root. 
-
-Predictions are made as a 3 second window moves along with a 1.5 second hop. 
-
-Predictions are stored for each window along the recording, as a new entry in the csv file. 
-
-### Usage for prediction ###
 In the WSL terminal, type:
 
 python3 predict.py
@@ -56,4 +42,20 @@ Paste or type the relative or absolute path to the recordings you'd like to proc
 Enter the number of cpu cores to use for preprocessing. For small jobs use 0, for large jobs use 4 or 8 if your computer has that many cores. 
 
 Try to chunk the work into batches in case something crashes, since currently saving only happens on completion of the predict.py program. 
+
+This model will make predictions on all of the wav, flac or mp3 files in the child folders of the provided directory. 
+
+The results will be saved in a .csv file called OSFL-Scores-<current-time>.csv at the project root. 
+
+Predictions are made as a 3 second window moves along with a 1.5 second hop. 
+
+Predictions are stored for each window along the recording, as a new entry in the csv file.
+
+
+## Installation on mac and linux
+This is the same as installation on windows, except that you don't need to install WSL. 
+Follow the instructions on how to install opensoundscape with Anaconda here, but use opensoundscape 0.10.0 instead:
+http://opensoundscape.org/en/latest/installation/mac_and_linux.html#installation-via-anaconda
+
+
 
