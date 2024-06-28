@@ -1,6 +1,7 @@
 # Installation on Windows
 
-1. Install WSL: Follow the instructions at http://opensoundscape.org/en/latest/installation/windows.html in order to install Windows Subsysyem for Linux, but when prompted to install opensoundscape __0.10.1__, install opensoundscape __0.10.0__ instead.
+1. Install WSL:<br> 
+Follow the instructions at http://opensoundscape.org/en/latest/installation/windows.html in order to install Windows Subsysyem for Linux, but when prompted to install opensoundscape __0.10.1__, install opensoundscape __0.10.0__ instead.
 
 2. In addition to the instructions on opso, you may need to use the following powershell commands:
 
@@ -11,9 +12,8 @@
 `wsl --install --distribution Ubuntu-22.04`
 
 
-3. Create and activate a conda environment
-If you haven't already, 
-enter the following in the teminal:
+3. Create and activate a conda environment<br>
+Enter the following in the teminal if you haven't already done so:
 
 `conda create --name osfl-recognizer python=3.10`
 

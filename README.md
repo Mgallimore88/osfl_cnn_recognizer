@@ -57,7 +57,7 @@ Source code is located in the .src folder, and is intended to be used in the con
     │   ├── processed      <- The final, canonical data sets for modeling.
     │   └── raw            <- The original, immutable data dump.
     │    │
-    ├── models             <- Trained models, model predictions, or model summaries
+    ├── models             <- Trained models
     │
     ├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
     │                         the creator's initials, and a short `-` delimited description, e.g.
@@ -68,8 +68,7 @@ Source code is located in the .src folder, and is intended to be used in the con
     ├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
     │   └── figures        <- Generated graphics and figures to be used in reporting
     │
-    ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
-    │                         generated with `pip freeze > requirements.txt`
+    ├── requirements.txt   <- The requirements file for running the model
     │
     ├── src                <- Source code for use in this project.
     │   ├── __init__.py    <- Makes src a Python module
