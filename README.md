@@ -14,7 +14,7 @@ This project uses audio collected from locations across Canada, and tagged on [W
 
 ## To make predictions using the model
 - you'll need [git](https://git-scm.com/) and [Anaconda](https://anaconda.org/) installed. 
-- Additionally if you're using Windows, follow the instructions [here](installing%20opensoundscape%20on%20windows.txt) to install WSL
+- Additionally if you're using Windows, follow the instructions [here](windows-install.md) to install WSL
 
 - clone this GitHub repository by running the following command in the terminal:<br>
 `git clone https://github.com/Mgallimore88/osfl_cnn_recognizer.git` <br>
@@ -27,8 +27,9 @@ This project uses audio collected from locations across Canada, and tagged on [W
 `conda activate osfl-recognizer` <br>
 `pip install -r requirements.txt` <br>
 
-## making predictions
+## To make predictions
 `python3 predict.py` <br>
+
 Enter the absolute path to the folder containing the recordings you want to analyze when prompted.
 
 Enter the number of cpu cores to use for preprocessing. For small jobs use 0, for large jobs try using 4 or 8 if your computer has that many cores.
@@ -40,7 +41,7 @@ The model will process audio files in all the sub-directories of the provided fo
 Suggested threshold to start ~ 0.8
 
 ## To train a new model 
-look at _notebooks/model_training_walkthrough_, which contians a series of notebooks showing the training process from start to finish. Anybody wanting to train a similar model in the future can see the process and will have a good starting point to build upon, however the audio used to train the model needs obtaining from a WildTrax organization. 
+look at __notebooks/model_training_walkthrough__, which contians a series of notebooks showing the training process from start to finish. Anybody wanting to train a similar model in the future can see the process and will have a good starting point to build upon, however the audio used to train the model needs obtaining from a WildTrax organization. 
 
 The OpenSoundscape documentation and tutorials should be studied and understood since many of the processes used here are implementations of the tools provided by the OpenSoundscape library.
 
