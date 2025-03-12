@@ -5,6 +5,8 @@
 This Python project develops a method to build and train a convolutional neural network to recognize 
 the presence or absence of a single bird species in an audio recording.  
 
+A description of the model training process and evaluation is available [here](https://mgallimore88.github.io/blog/posts/osfl-project-description/B-project-description.html)
+
 The trained model is made available to make predictions on local audio files. 
 
 The project uses the [OpenSoundscape](http://opensoundscape.org/en/latest/index.html) library for audio preprocessing and model training.
